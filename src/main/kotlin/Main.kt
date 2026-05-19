@@ -14,17 +14,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.*
 import androidx.compose.material3.*
+import androidx.compose.ui.draw.scale
 
 fun main() = application()
 {
+    val game = remember { Game().apply { init() } }
+
     Window(onCloseRequest = ::exitApplication, title = "Chess")
     {
-        App()
+        App(game)
     }
 }
 
 @Composable
-fun App()
+fun App(game: Game)
 {
     val hScroll = rememberScrollState()
     val vScroll = rememberScrollState()
@@ -56,9 +59,8 @@ fun App()
             ) {
                 Row()
                 {
-                    styledButton("RESTART GAME") {  //TODO game functions should be called here
-                         }
-                    styledButton("RESIGN GAME") {  }
+                    styledButton("RESTART GAME") { game.restartGame() }
+                    styledButton("RESIGN GAME") { game.resignGame()}
                 }
             }
             //TODO title and some other buttons should be displayed here
@@ -116,14 +118,17 @@ fun App()
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally)
                 {
-                    //TODO game info should be displayed here
+                    gameInfoText(game)
                     Box(
                         modifier = Modifier
                             .horizontalScroll(hScroll)
                             .verticalScroll(vScroll)
                     )
                     {
-                        ChessBoard()
+                        ChessBoard(
+                            game,
+                            onSquareClick = { row, col -> game.onSquareClick(row, col)}
+                        )
                     }
                 }
 
@@ -141,11 +146,11 @@ fun App()
         }
     }
 }
-fun isWhiteSquare(row: Int, col: Int): Boolean {
-    return (row + col) % 2 == 0
-}
 @Composable
-fun ChessBoard() {
+fun ChessBoard(
+    game: Game,
+    onSquareClick: (row: Int, col: Int) -> Unit
+) {
     val lightSquare = Color(0xFFF0D9B5)
     val darkSquare = Color(0xFFB58863)
 
@@ -182,13 +187,30 @@ fun ChessBoard() {
                     for (row in 0..7) {
                         Row()
                         {
-                            for (col in 0..7)
+                            for (col in 0..7) {
+
+                                val piece = game.board.grid[row][col]
+
                                 Box(
                                     modifier = Modifier
                                         .size(96.dp)
                                         .background(if (isWhiteSquare(row, col)) lightSquare else darkSquare),
                                     contentAlignment = Alignment.Center
-                                ){}
+                                ) {
+                                    if (piece != null)
+                                    {
+                                        Text(
+                                            text = piece.type.getSymbol(),
+                                            fontSize = 64.sp,
+                                            modifier = Modifier.scale(1.4f),
+                                            color = if (piece.player == Player.WHITE)
+                                                Color.White
+                                            else
+                                                Color.Black
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -235,5 +257,31 @@ fun styledButton(
                 letterSpacing = 1.sp
             )
         )
+    }
+}
+
+@Composable
+fun gameInfoText(game : Game)
+{
+    Row()
+    {
+        if (game.gameState != GameState.PLAYING)
+        {
+            Text(
+                text = game.message,
+                color = Color.Red,
+                style = MaterialTheme.typography.headlineMedium
+            )
+        }
+        else
+        {
+            Text(
+                text = if (game.playerOnTurn == Player.WHITE)
+                    "White to move"
+                else
+                    "Black to move",
+                style = MaterialTheme.typography.headlineMedium
+            )
+        }
     }
 }

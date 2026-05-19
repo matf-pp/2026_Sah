@@ -28,4 +28,14 @@ class Game {
         playerOnTurn = Player.WHITE
         gameState = GameState.PLAYING
     }
+
+    fun resignGame() {
+        gameState = GameState.RESIGNED
+
+        message = "RESIGNED!" + "   " + if(playerOnTurn == Player.WHITE)
+            whoWon(Player.BLACK)
+        else
+            whoWon(Player.WHITE)
+    }
+    fun onSquareClick(row: Int, col: Int) {}
 }
