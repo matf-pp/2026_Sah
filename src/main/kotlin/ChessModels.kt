@@ -28,3 +28,13 @@ data class CastlingRights(
     var blackKingSide: Boolean,
     var blackQueenSide: Boolean
 )
+
+enum class GameState
+{
+    PLAYING,
+    RESIGNED,
+    CHECKMATE,
+    STALEMATE,
+    DRAW,
+    TIMEOUT
+}
