@@ -1,5 +1,51 @@
 class MoveValidator(private val board: Board)
 {
+    fun getLegalMoves(row: Int, col: Int): MoveOptions
+    {
+        val piece = board.grid[row][col] ?: return MoveOptions(emptyList(), emptyList())
+
+        val pseudoResults = getPseudoLegalMoves(row, col)
+
+        val legalMoves = mutableListOf<Pair<Pair<Int, Int>, MoveType>> ()
+        val legalCaptures = mutableListOf<Pair<Int, Int>> ()
+
+        for ((pos, type) in pseudoResults.moves)
+        {
+            val (toRow, toCol) = pos
+            val opponent = if (piece.player == Player.WHITE) Player.BLACK else Player.WHITE
+
+            var isLegal = true
+
+            var tempBoard:Board
+
+            if(type == MoveType.NORMAL)
+            {
+                tempBoard = board.clone()
+
+                tempBoard.grid[toRow][toCol] = piece
+                tempBoard.grid[row][col] = null
+
+                val validator = CheckValidator(tempBoard)
+                if (validator.isPlayerGivingCheck(opponent))
+                {
+                    isLegal = false
+                }
+            }
+
+
+            if (isLegal)
+            {
+                legalMoves.add(toRow to toCol to type)
+                if((toRow to toCol) in pseudoResults.captures)
+                {
+                    legalCaptures.add(toRow to toCol)
+                }
+            }
+        }
+
+        return MoveOptions(legalMoves.toList(), legalCaptures.toList())
+    }
+
     fun getPseudoLegalMoves(row: Int, col: Int ): MoveOptions
     {
         val piece = board.grid[row][col] ?: return MoveOptions(emptyList(), emptyList())
