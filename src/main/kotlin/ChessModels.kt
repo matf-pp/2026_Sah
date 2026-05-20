@@ -38,3 +38,16 @@ enum class GameState
     DRAW,
     TIMEOUT
 }
+
+enum class MoveType
+{
+    NORMAL,
+    CASTLE_KINGS_SIDE,
+    CASTLE_QUEENS_SIDE,
+    EN_PASSANT
+}
+
+data class MoveOptions(
+    val moves: List<Pair<Pair<Int, Int>, MoveType>>,
+    val captures: List<Pair<Int, Int>>
+)
