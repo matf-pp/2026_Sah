@@ -65,6 +65,20 @@ class MoveValidator(private val board: Board)
                     }
                 }
             }
+            else if (type == MoveType.EN_PASSANT)
+            {
+                tempBoard = board.clone()
+
+                tempBoard.grid[toRow][toCol] = piece
+                tempBoard.grid[row][col] = null
+                tempBoard.grid[row][toCol] = null
+
+                val validator = CheckValidator(tempBoard)
+                if (validator.isPlayerGivingCheck(opponent))
+                {
+                    isLegal = false
+                }
+            }
 
 
             if (isLegal)
@@ -260,6 +274,20 @@ class MoveValidator(private val board: Board)
                     moves.add((oneStep to newCol) to MoveType.NORMAL)
                     captures.add(oneStep to newCol)
                 }
+            }
+        }
+
+        if (board.enPassantTarget != null)
+        {
+            if (((row+moveDirection) to (col-1)) == board.enPassantTarget)
+            {
+                moves.add(Pair(Pair(row + moveDirection, col - 1), MoveType.EN_PASSANT))
+                captures.add(Pair(row + moveDirection, col - 1))
+            }
+            if (((row+moveDirection) to (col+1)) == board.enPassantTarget)
+            {
+                moves.add(Pair(Pair(row + moveDirection, col + 1), MoveType.EN_PASSANT))
+                captures.add(Pair(row + moveDirection, col + 1))
             }
         }
 

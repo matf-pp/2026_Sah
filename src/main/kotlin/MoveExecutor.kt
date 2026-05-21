@@ -35,7 +35,6 @@ class MoveExecutor(private val game: Game)
             board.grid[fromRow][7] = null
         }
     }
-
     fun updateCastlingRights(board: Board, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
     {
         if (fromRow == CastlingSquare.WHITE_KING.row && fromCol == CastlingSquare.WHITE_KING.col)
@@ -69,6 +68,31 @@ class MoveExecutor(private val game: Game)
             (toRow == CastlingSquare.BLACK_QUEEN_ROOK.row && toCol == CastlingSquare.BLACK_QUEEN_ROOK.col))
         {
             board.castlingRights.blackQueenSide = false
+        }
+    }
+
+    fun checkEnPassantConditions(movingPiece:ChessPiece,toRow:Int,toCol:Int,tempBoard:Board): Boolean
+    {
+        return movingPiece.type == Piece.PAWN && (toRow to toCol) == tempBoard.enPassantTarget
+    }
+    fun executeEnPassant(board: Board, movingPiece: ChessPiece, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
+    {
+        val capturedPiece = board.grid[fromRow][toCol]!!
+        game.capturedPieces += capturedPiece
+
+        board.grid[toRow][toCol] = movingPiece
+        board.grid[fromRow][fromCol] = null
+        board.grid[fromRow][toCol] = null
+    }
+    fun updateEnPassantTarget(board: Board, movingPiece: ChessPiece, fromRow: Int, toRow: Int, toCol: Int)
+    {
+        if(movingPiece.type == Piece.PAWN && abs(toRow - fromRow) == 2)
+        {
+            board.enPassantTarget=((fromRow + toRow)/2) to toCol
+        }
+        else
+        {
+            board.enPassantTarget= null
         }
     }
 }
