@@ -35,5 +35,60 @@ class CheckValidator(private val board: Board)
         return kingPos in moves
     }
 
+    fun isOpponentCheckmatedByPlayer(player: Player): Boolean
+    {
+        val opponent = if (player == Player.WHITE) Player.BLACK else Player.WHITE
+
+        if (!isPlayerGivingCheck(player))
+        {
+            return false
+        }
+
+        for (row in 0..7)
+        {
+            for (col in 0..7)
+            {
+                val piece = board.grid[row][col] ?: continue
+                if (piece.player != opponent) continue
+
+                val validator= MoveValidator(board)
+
+                val moves = validator.getLegalMoves( row, col).moves.map { it.first }
+
+                if(moves.isNotEmpty())
+                {
+                    return false
+                }
+            }
+        }
+
+        return true
+    }
+    fun isStalemateCausedByPlayer(player: Player): Boolean
+    {
+        if (isPlayerGivingCheck(player))
+        {
+            return false
+        }
+
+        for (row in 0..7)
+        {
+            for (col in 0..7)
+            {
+                val piece = board.grid[row][col] ?: continue
+                if (piece.player == player) continue
+
+                val validator= MoveValidator(board)
+                val moves = validator.getLegalMoves( row, col).moves.map { it.first }
+
+                if (moves.isNotEmpty())
+                {
+                    return false
+                }
+            }
+        }
+
+        return true
+    }
 
 }
