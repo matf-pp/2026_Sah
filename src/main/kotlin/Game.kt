@@ -8,6 +8,7 @@ class Game {
     var board by mutableStateOf(Board())
     var playerOnTurn by mutableStateOf(Player.WHITE)
     var gameState by mutableStateOf(GameState.PLAYING)
+    var capturedPieces by mutableStateOf(listOf<ChessPiece>())
 
     fun init()
     {
@@ -30,6 +31,8 @@ class Game {
     }
 
     fun resignGame() {
+
+        if(gameState == GameState.RESIGNED) return
         gameState = GameState.RESIGNED
 
         message = "RESIGNED!" + "   " + if(playerOnTurn == Player.WHITE)
