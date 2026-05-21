@@ -31,6 +31,40 @@ class MoveValidator(private val board: Board)
                     isLegal = false
                 }
             }
+            else if (type == MoveType.CASTLE_QUEENS_SIDE)
+            {
+                for(tempCol in 2 .. 4)
+                {
+                    tempBoard = board.clone()
+
+                    tempBoard.grid[toRow][tempCol] = piece
+                    tempBoard.grid[row][col] = if(col == tempCol) piece else null
+
+                    val validator = CheckValidator(tempBoard)
+                    if (validator.isPlayerGivingCheck(opponent))
+                    {
+                        isLegal = false
+                        break
+                    }
+                }
+            }
+            else if (type == MoveType.CASTLE_KINGS_SIDE)
+            {
+                for(tempCol in 4 .. 6)
+                {
+                    tempBoard = board.clone()
+
+                    tempBoard.grid[toRow][tempCol] = piece
+                    tempBoard.grid[row][col] = if(col == tempCol) piece else null
+
+                    val validator = CheckValidator(tempBoard)
+                    if (validator.isPlayerGivingCheck(opponent))
+                    {
+                        isLegal = false
+                        break
+                    }
+                }
+            }
 
 
             if (isLegal)
@@ -257,6 +291,43 @@ class MoveValidator(private val board: Board)
                 {
                     moves.add(newRow to newCol to MoveType.NORMAL)
                     captures.add(newRow to newCol)
+                }
+            }
+        }
+
+        val startRow = if (piece.player == Player.WHITE) 7 else 0
+
+        if(piece.player == Player.WHITE)
+        {
+            if(board.castlingRights.whiteQueenSide)
+            {
+                if(board.grid[startRow][1] == null && board.grid[startRow][2] == null && board.grid[startRow][3] == null)
+                {
+                    moves.add(Pair(Pair(startRow, col - 2), MoveType.CASTLE_QUEENS_SIDE))
+                }
+            }
+            if(board.castlingRights.whiteKingSide)
+            {
+                if(board.grid[startRow][5] == null && board.grid[startRow][6] == null)
+                {
+                    moves.add(Pair(Pair(startRow, col + 2), MoveType.CASTLE_KINGS_SIDE))
+                }
+            }
+        }
+        else
+        {
+            if(board.castlingRights.blackQueenSide)
+            {
+                if(board.grid[startRow][1] == null && board.grid[startRow][2] == null && board.grid[startRow][3] == null)
+                {
+                    moves.add(Pair(Pair(startRow, col - 2), MoveType.CASTLE_QUEENS_SIDE))
+                }
+            }
+            if(board.castlingRights.blackKingSide)
+            {
+                if(board.grid[startRow][5] == null && board.grid[startRow][6] == null)
+                {
+                    moves.add(Pair(Pair(startRow, col + 2), MoveType.CASTLE_KINGS_SIDE))
                 }
             }
         }

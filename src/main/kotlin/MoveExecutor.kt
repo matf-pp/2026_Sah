@@ -1,3 +1,5 @@
+import kotlin.math.abs
+
 class MoveExecutor(private val game: Game)
 {
     fun executeNormalMove(board: Board, movingPiece: ChessPiece, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
@@ -11,5 +13,62 @@ class MoveExecutor(private val game: Game)
 
         board.grid[toRow][toCol] = movingPiece
         board.grid[fromRow][fromCol] = null
+    }
+
+    fun checkCastlingConditions(movingPiece: ChessPiece,fromCol: Int,toCol: Int):Boolean
+    {
+        return movingPiece.type == Piece.KING && abs(fromCol - toCol) == 2
+    }
+    fun executeCastling(board: Board, movingPiece: ChessPiece, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
+    {
+        board.grid[fromRow][fromCol] = null
+        board.grid[toRow][toCol] = movingPiece
+
+        if (toCol < fromCol)
+        {
+            board.grid[fromRow][toCol + 1] = board.grid[fromRow][0]
+            board.grid[fromRow][0] = null
+        }
+        else
+        {
+            board.grid[fromRow][toCol - 1] = board.grid[fromRow][7]
+            board.grid[fromRow][7] = null
+        }
+    }
+
+    fun updateCastlingRights(board: Board, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
+    {
+        if (fromRow == CastlingSquare.WHITE_KING.row && fromCol == CastlingSquare.WHITE_KING.col)
+        {
+            board.castlingRights.whiteKingSide = false
+            board.castlingRights.whiteQueenSide = false
+        }
+        if (fromRow == CastlingSquare.BLACK_KING.row && fromCol == CastlingSquare.BLACK_KING.col)
+        {
+            board.castlingRights.blackKingSide = false
+            board.castlingRights.blackQueenSide = false
+        }
+
+        if ((fromRow == CastlingSquare.WHITE_KING_ROOK.row && fromCol == CastlingSquare.WHITE_KING_ROOK.col) ||
+            (toRow == CastlingSquare.WHITE_KING_ROOK.row && toCol == CastlingSquare.WHITE_KING_ROOK.col))
+        {
+            board.castlingRights.whiteKingSide = false
+        }
+        if ((fromRow == CastlingSquare.WHITE_QUEEN_ROOK.row && fromCol == CastlingSquare.WHITE_QUEEN_ROOK.col) ||
+            (toRow == CastlingSquare.WHITE_QUEEN_ROOK.row && toCol == CastlingSquare.WHITE_QUEEN_ROOK.col))
+        {
+            board.castlingRights.whiteQueenSide = false
+        }
+
+        if ((fromRow == CastlingSquare.BLACK_KING_ROOK.row && fromCol == CastlingSquare.BLACK_KING_ROOK.col) ||
+            (toRow == CastlingSquare.BLACK_KING_ROOK.row && toCol == CastlingSquare.BLACK_KING_ROOK.col))
+        {
+            board.castlingRights.blackKingSide = false
+        }
+        if ((fromRow == CastlingSquare.BLACK_QUEEN_ROOK.row && fromCol == CastlingSquare.BLACK_QUEEN_ROOK.col) ||
+            (toRow == CastlingSquare.BLACK_QUEEN_ROOK.row && toCol == CastlingSquare.BLACK_QUEEN_ROOK.col))
+        {
+            board.castlingRights.blackQueenSide = false
+        }
     }
 }

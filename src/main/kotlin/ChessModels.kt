@@ -51,3 +51,14 @@ data class MoveOptions(
     val moves: List<Pair<Pair<Int, Int>, MoveType>>,
     val captures: List<Pair<Int, Int>>
 )
+
+enum class CastlingSquare(val row: Int, val col: Int)
+{
+    BLACK_QUEEN_ROOK(0, 0),
+    BLACK_KING_ROOK(0, 7),
+    BLACK_KING(0, 4),
+
+    WHITE_QUEEN_ROOK(7, 0),
+    WHITE_KING_ROOK(7, 7),
+    WHITE_KING(7, 4)
+}
