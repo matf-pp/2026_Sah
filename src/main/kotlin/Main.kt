@@ -1,6 +1,7 @@
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -190,11 +191,18 @@ fun ChessBoard(
                             for (col in 0..7) {
 
                                 val piece = game.board.grid[row][col]
+                                val isSelected = game.selectedStartSquare == (row to col)
 
                                 Box(
                                     modifier = Modifier
                                         .size(96.dp)
-                                        .background(if (isWhiteSquare(row, col)) lightSquare else darkSquare),
+                                        .background(if (isWhiteSquare(row, col)) lightSquare else darkSquare)
+                                        .then(if (isSelected)
+                                            Modifier.border(3.dp, Color.Green)
+                                        else
+                                            Modifier
+                                        )
+                                        .clickable { onSquareClick(row, col) },
                                     contentAlignment = Alignment.Center
                                 ) {
                                     if (piece != null)
