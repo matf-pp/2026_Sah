@@ -52,6 +52,11 @@ data class MoveOptions(
     val captures: List<Pair<Int, Int>>
 )
 
+data class CheckState(
+    val isCheck: Boolean,
+    val kingPosition: Pair<Int, Int>?
+)
+
 enum class CastlingSquare(val row: Int, val col: Int)
 {
     BLACK_QUEEN_ROOK(0, 0),

@@ -4,6 +4,7 @@ import androidx.compose.runtime.setValue
 
 class Game {
 
+    var checkState by mutableStateOf(CheckState(false, null))
     var message by mutableStateOf("")
     var board by mutableStateOf(Board())
     var playerOnTurn by mutableStateOf(Player.WHITE)
@@ -30,6 +31,8 @@ class Game {
 
     fun restartGame() {
         init()
+         
+        checkState = CheckState(false, null)
 
         selectedStartSquare = null
         isEndSquareSelected = false
@@ -80,6 +83,9 @@ class Game {
                 moveExecutor.updateCastlingRights(tempBoard,fromRow,fromCol,toRow,toCol)
                 moveExecutor.updateEnPassantTarget(tempBoard,movingPiece,fromRow,toRow,toCol)
 
+                evaluateCheck(playerOnTurn)
+                evaluateEndConditions(playerOnTurn)
+
                 board = tempBoard
                 switchPlayerOnTurn()
             }
@@ -122,4 +128,43 @@ class Game {
         else
             Player.WHITE
     }
+
+    fun evaluateCheck(player: Player)
+    {
+        val validator = CheckValidator(board)
+
+        if (validator.isPlayerGivingCheck(player))
+        {
+            val enemy = if (player == Player.WHITE) Player.BLACK else Player.WHITE
+            checkState = CheckState(true, findKing(board, enemy))
+
+        }
+        else
+        {
+            checkState = CheckState(false, null)
+        }
+    }
+    fun evaluateEndConditions(player: Player)
+    {
+        val checkValidator = CheckValidator(board)
+        //TODO implement draw logic
+        if (checkValidator.isOpponentCheckmatedByPlayer(player))
+        {
+            message = "CHECKMATE!" + "  " + whoWon(player)
+            gameState = GameState.CHECKMATE
+        }
+        else if (checkValidator.isStalemateCausedByPlayer(player))
+        {
+            message = "STALEMATE!" + "  " + whoWon(null)
+            gameState = GameState.STALEMATE
+        }
+        else
+        {
+            message = ""
+            gameState = GameState.PLAYING
+        }
+
+    }
+
+
 }
