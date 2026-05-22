@@ -14,6 +14,8 @@ class Game {
     var isEndSquareSelected by mutableStateOf(false)
     var moveOptions by mutableStateOf(MoveOptions(emptyList(), emptyList()))
 
+    val moveExecutor = MoveExecutor(this)
+
     fun init()
     {
         val tempBoard = Board()
@@ -58,9 +60,36 @@ class Game {
             val (toRow, toCol) = row to col
             val legalMoves = moveOptions.moves.map { it.first }.toSet()
 
-        }
+            if (toRow to toCol in legalMoves) {
 
+                val movingPiece = board.grid[fromRow][fromCol] ?:return
+                val tempBoard = board.clone()
+                if (moveExecutor.checkCastlingConditions(movingPiece,fromCol,toCol))
+                {
+                    moveExecutor.executeCastling(tempBoard,movingPiece,fromRow,fromCol,toRow,toCol)
+                }
+                else if(moveExecutor.checkEnPassantConditions(movingPiece,toRow,toCol,tempBoard))
+                {
+                    moveExecutor.executeEnPassant(tempBoard,movingPiece,fromRow,fromCol,toRow,toCol)
+                }
+                else
+                {
+                    moveExecutor.executeNormalMove(tempBoard,movingPiece,fromRow,fromCol,toRow,toCol)
+                }
+
+                moveExecutor.updateCastlingRights(tempBoard,fromRow,fromCol,toRow,toCol)
+                moveExecutor.updateEnPassantTarget(tempBoard,movingPiece,fromRow,toRow,toCol)
+
+                board = tempBoard
+                switchPlayerOnTurn()
+            }
+
+            selectedStartSquare = null
+            isEndSquareSelected = false
+            moveOptions=MoveOptions(emptyList(),emptyList())
+        }
     }
+
     fun squareSelection(row: Int, col: Int) {
 
         val piece = board.grid[row][col]
