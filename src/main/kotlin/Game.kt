@@ -31,7 +31,7 @@ class Game {
 
     fun restartGame() {
         init()
-         
+
         checkState = CheckState(false, null)
 
         selectedStartSquare = null
