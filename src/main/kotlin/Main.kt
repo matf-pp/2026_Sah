@@ -6,6 +6,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
@@ -27,6 +28,7 @@ fun main() = application()
     }
 }
 
+
 @Composable
 fun App(game: Game)
 {
@@ -39,6 +41,7 @@ fun App(game: Game)
         letterSpacing = 1.sp,
         color = Color.Black
     )
+
     Column(
         modifier = Modifier.fillMaxSize()
     )
@@ -50,21 +53,7 @@ fun App(game: Game)
                 .background(Color(0xFFB58863))
         )
         {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF4A2F1A))
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row()
-                {
-                    styledButton("RESTART GAME") { game.restartGame() }
-                    styledButton("RESIGN GAME") { game.resignGame()}
-                }
-            }
-            //TODO title and some other buttons should be displayed here
+            topBarItems(game)
         }
 
         Row(
@@ -96,7 +85,15 @@ fun App(game: Game)
                         .weight(1f, fill = false)
                 )
                 {
-                    //TODO this column should display game history
+                    game.historyManager.getMovesHistoryFormated().forEachIndexed { index, moveText ->
+                        Text(
+                            text = moveText,
+                            style = commonTextStyle,
+                            modifier = Modifier.clickable {
+                                game.historyManager.goToMove(index)
+                            }
+                        )
+                    }
                 }
             }
 
@@ -112,7 +109,15 @@ fun App(game: Game)
                         style = commonTextStyle
                     )
 
-                    //TODO captured pieces should be displayed here
+                    game.capturedPieces
+                        .filter { it.player == Player.WHITE }
+                        .forEach{ piece ->
+                            Text(
+                                text = piece.type.getSymbol(),
+                                fontSize = 40.sp,
+                                color = Color.White
+                            )
+                        }
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
@@ -120,6 +125,7 @@ fun App(game: Game)
                 Column(horizontalAlignment = Alignment.CenterHorizontally)
                 {
                     gameInfoText(game)
+
                     Box(
                         modifier = Modifier
                             .horizontalScroll(hScroll)
@@ -127,8 +133,8 @@ fun App(game: Game)
                     )
                     {
                         ChessBoard(
-                            game,
-                            onSquareClick = { row, col -> game.onSquareClick(row, col)}
+                            game=game,
+                            onSquareClick = { row, col -> game.onSquareClick(row, col) }
                         )
                     }
                 }
@@ -141,12 +147,22 @@ fun App(game: Game)
                         "Black captures",
                         style = commonTextStyle
                     )
-                    //TODO captured pieces should be displayed here
+
+                    game.capturedPieces
+                        .filter { it.player == Player.BLACK }
+                        .forEach{ piece ->
+                            Text(
+                                text = piece.type.getSymbol(),
+                                fontSize = 40.sp,
+                                color = Color.Black
+                            )
+                        }
                 }
             }
         }
     }
 }
+
 @Composable
 fun ChessBoard(
     game: Game,
@@ -154,6 +170,7 @@ fun ChessBoard(
 ) {
     val lightSquare = Color(0xFFF0D9B5)
     val darkSquare = Color(0xFFB58863)
+    val checkSquare = Color(0xFFE53935)
 
     Row(
         modifier = Modifier.padding(16.dp),
@@ -193,12 +210,20 @@ fun ChessBoard(
                                 val piece = game.board.grid[row][col]
                                 val isSelected = game.selectedStartSquare == (row to col)
 
+                                val isCheck = game.checkState.isCheck && game.checkState.kingPosition == (row to col)
+                                val isMovable = (row to col) in game.moveOptions.moves.map { it.first }.toSet()
+                                val isCapturable = (row to col) in game.moveOptions.captures
+
                                 Box(
                                     modifier = Modifier
                                         .size(96.dp)
                                         .background(if (isWhiteSquare(row, col)) lightSquare else darkSquare)
                                         .then(if (isSelected)
                                             Modifier.border(3.dp, Color.Green)
+                                        else
+                                            Modifier
+                                        ).then(if (isCheck)
+                                            Modifier.background(checkSquare.copy(alpha = 0.4f))
                                         else
                                             Modifier
                                         )
@@ -216,6 +241,14 @@ fun ChessBoard(
                                             else
                                                 Color.Black
                                         )
+                                    }
+                                    if (isCapturable)
+                                    {
+                                        Box(modifier = Modifier.fillMaxSize().padding(4.dp).border(3.dp, Color.Black.copy(alpha = 0.35f), CircleShape))
+                                    }
+                                    else if (isMovable)
+                                    {
+                                        Box(modifier = Modifier.size(14.dp).background(Color.Black.copy(alpha = 0.35f), CircleShape))
                                     }
                                 }
                             }
@@ -268,6 +301,23 @@ fun styledButton(
     }
 }
 
+@Composable
+fun topBarItems(game: Game) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF4A2F1A))
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row()
+        {
+            styledButton("RESTART GAME") { game.restartGame() }
+            styledButton("RESIGN GAME") { game.resignGame()}
+        }
+    }
+}
 @Composable
 fun gameInfoText(game : Game)
 {
