@@ -2,15 +2,49 @@ import kotlin.math.abs
 
 class MoveExecutor(private val game: Game)
 {
-    fun executeNormalMove(board: Board, movingPiece: ChessPiece, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
-    {
+    fun executeNormalMove(board: Board, movingPiece: ChessPiece, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int) {
         val capturedPiece = board.grid[toRow][toCol]
 
         if (capturedPiece != null) {
             game.capturedPieces += capturedPiece
+            game.fiftyMoveCounter = 0
 
+            game.historyManager.addMoveToHistory(
+                Move(
+                    game.historyManager.getMovesCounter(),
+                    (fromRow to fromCol),
+                    (toRow to toCol),
+                    movingPiece,
+                    true,
+                    null,
+                    MoveType.NORMAL,
+                    false,
+                    GameState.PLAYING,
+                    game.playerOnTurn
+                )
+            )
+        } else {
+            if (movingPiece.type == Piece.PAWN) {
+                game.fiftyMoveCounter = 0
+            } else {
+                game.fiftyMoveCounter++
+            }
+
+            game.historyManager.addMoveToHistory(
+                Move(
+                    game.historyManager.getMovesCounter(),
+                    (fromRow to fromCol),
+                    (toRow to toCol),
+                    movingPiece,
+                    false,
+                    null,
+                    MoveType.NORMAL,
+                    false,
+                    GameState.PLAYING,
+                    game.playerOnTurn
+                )
+            )
         }
-
         board.grid[toRow][toCol] = movingPiece
         board.grid[fromRow][fromCol] = null
     }
@@ -18,21 +52,48 @@ class MoveExecutor(private val game: Game)
     {
         return movingPiece.type == Piece.KING && abs(fromCol - toCol) == 2
     }
-    fun executeCastling(board: Board, movingPiece: ChessPiece, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
-    {
+    fun executeCastling(board: Board, movingPiece: ChessPiece, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int) {
         board.grid[fromRow][fromCol] = null
         board.grid[toRow][toCol] = movingPiece
 
-        if (toCol < fromCol)
-        {
+        if (toCol < fromCol) {
             board.grid[fromRow][toCol + 1] = board.grid[fromRow][0]
             board.grid[fromRow][0] = null
-        }
-        else
-        {
+
+            game.historyManager.addMoveToHistory(
+                Move(
+                    game.historyManager.getMovesCounter(),
+                    (fromRow to fromCol),
+                    (toRow to toCol),
+                    movingPiece,
+                    false,
+                    null,
+                    MoveType.CASTLE_QUEENS_SIDE,
+                    false,
+                    GameState.PLAYING,
+                    game.playerOnTurn
+                )
+            )
+        } else {
             board.grid[fromRow][toCol - 1] = board.grid[fromRow][7]
             board.grid[fromRow][7] = null
+
+            game.historyManager.addMoveToHistory(
+                Move(
+                    game.historyManager.getMovesCounter(),
+                    (fromRow to fromCol),
+                    (toRow to toCol),
+                    movingPiece,
+                    false,
+                    null,
+                    MoveType.CASTLE_KINGS_SIDE,
+                    false,
+                    GameState.PLAYING,
+                    game.playerOnTurn
+                )
+            )
         }
+        game.fiftyMoveCounter++
     }
     fun updateCastlingRights(board: Board, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
     {
@@ -82,6 +143,20 @@ class MoveExecutor(private val game: Game)
         board.grid[toRow][toCol] = movingPiece
         board.grid[fromRow][fromCol] = null
         board.grid[fromRow][toCol] = null
+
+        game.historyManager.addMoveToHistory(Move(
+            game.historyManager.getMovesCounter(),
+            (fromRow to fromCol),
+            (toRow to toCol),
+            movingPiece,
+            true,
+            null,
+            MoveType.EN_PASSANT,
+            false,
+            GameState.PLAYING,
+            game.playerOnTurn))
+
+        game.fiftyMoveCounter = 0
     }
     fun updateEnPassantTarget(board: Board, movingPiece: ChessPiece, fromRow: Int, toRow: Int, toCol: Int)
     {
