@@ -16,6 +16,7 @@ class Game {
     var moveOptions by mutableStateOf(MoveOptions(emptyList(), emptyList()))
 
     val moveExecutor = MoveExecutor(this)
+    val historyManager = HistoryManager(this)
 
     fun init()
     {
@@ -41,6 +42,8 @@ class Game {
         message = ""
         playerOnTurn = Player.WHITE
         gameState = GameState.PLAYING
+
+        historyManager.reset()
     }
 
     fun resignGame() {
@@ -48,7 +51,19 @@ class Game {
         if(gameState != GameState.PLAYING) return
         gameState = GameState.RESIGNED
 
-        message = "RESIGNED!" + "   " + if(playerOnTurn == Player.WHITE)
+        historyManager.addMoveToHistory(Move(
+            -1,
+            (-1 to -1),
+            (-1 to -1),
+            null,
+            false,
+            null,
+            null,
+            false,
+            gameState,
+            playerOnTurn))
+
+            message = "RESIGNED!" + "   " + if(playerOnTurn == Player.WHITE)
             whoWon(Player.BLACK)
         else
             whoWon(Player.WHITE)
@@ -87,6 +102,11 @@ class Game {
                 evaluateEndConditions(playerOnTurn)
 
                 board = tempBoard
+
+                historyManager.increaseMoveCounter()
+                historyManager.addBoardToSnapshots(board.clone())
+
+
                 switchPlayerOnTurn()
             }
 
@@ -138,6 +158,9 @@ class Game {
             val enemy = if (player == Player.WHITE) Player.BLACK else Player.WHITE
             checkState = CheckState(true, findKing(board, enemy))
 
+            val last = historyManager.popLastMove()
+            val updated = last.copy(check=true)
+            historyManager.addMoveToHistory(updated)
         }
         else
         {
@@ -163,7 +186,19 @@ class Game {
             message = ""
             gameState = GameState.PLAYING
         }
-
+        if (gameState != GameState.PLAYING) {
+            historyManager.addMoveToHistory(Move(
+                -1,
+                (-1 to -1),
+                (-1 to -1),
+                null,
+                false,
+                null,
+                null,
+                false,
+                gameState,
+                playerOnTurn))
+        }
     }
 
 
