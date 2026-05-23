@@ -18,6 +18,10 @@ class Game {
     val moveExecutor = MoveExecutor(this)
     val historyManager = HistoryManager(this)
 
+    var lastBoardStateHash: Long? = null
+    val boardStateHashHistory = mutableMapOf<Long,Int>()
+    var fiftyMoveCounter:Int = 0
+
     fun init()
     {
         val tempBoard = Board()
@@ -34,6 +38,7 @@ class Game {
         init()
 
         checkState = CheckState(false, null)
+        capturedPieces = listOf()
 
         selectedStartSquare = null
         isEndSquareSelected = false
@@ -42,6 +47,10 @@ class Game {
         message = ""
         playerOnTurn = Player.WHITE
         gameState = GameState.PLAYING
+
+        boardStateHashHistory.clear()
+        lastBoardStateHash = null
+        fiftyMoveCounter = 0
 
         historyManager.reset()
     }
@@ -105,7 +114,6 @@ class Game {
 
                 historyManager.increaseMoveCounter()
                 historyManager.addBoardToSnapshots(board.clone())
-
 
                 switchPlayerOnTurn()
             }
@@ -200,6 +208,40 @@ class Game {
                 playerOnTurn))
         }
     }
+
+    fun calculateBoardStateHash(): Long
+    {
+        var hash: Long = 1
+
+        for (i in 0..7)
+        {
+            for (j in 0..7)
+            {
+                val piece = board.grid[i][j]
+                val pieceValue = if (piece == null)
+                    0
+                else
+                    (if (piece.player == Player.WHITE) 1 else 7) + piece.type.ordinal
+                hash = 31 * hash + pieceValue
+            }
+        }
+
+        hash = 31 * hash + if (board.castlingRights.whiteKingSide) 1 else 0
+        hash = 31 * hash + if (board.castlingRights.whiteQueenSide) 1 else 0
+        hash = 31 * hash + if (board.castlingRights.blackKingSide) 1 else 0
+        hash = 31 * hash + if (board.castlingRights.blackQueenSide) 1 else 0
+
+        if (board.enPassantTarget != null)
+        {
+            hash = 31 * hash + board.enPassantTarget!!.first
+            hash = 31 * hash + board.enPassantTarget!!.second
+        }
+
+        hash = 31 * hash + (if (playerOnTurn == Player.WHITE) 1 else 0)
+
+        return hash
+    }
+
 
 
 }

@@ -14,7 +14,6 @@ class MoveExecutor(private val game: Game)
         board.grid[toRow][toCol] = movingPiece
         board.grid[fromRow][fromCol] = null
     }
-
     fun checkCastlingConditions(movingPiece: ChessPiece,fromCol: Int,toCol: Int):Boolean
     {
         return movingPiece.type == Piece.KING && abs(fromCol - toCol) == 2
