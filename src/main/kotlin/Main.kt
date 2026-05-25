@@ -2,7 +2,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
@@ -11,12 +13,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.*
 import androidx.compose.material3.*
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+
+var setGameTime = mutableStateOf(true)
+
 
 fun main() = application()
 {
@@ -27,36 +32,48 @@ fun main() = application()
         App(game)
     }
 }
-
-
 @Composable
 fun App(game: Game)
 {
-    val hScroll = rememberScrollState()
-    val vScroll = rememberScrollState()
-    LaunchedEffect(Unit)
-    {
-        game.timerManager.startTimer()
-    }
-    val commonTextStyle = TextStyle(
-        fontSize = 24.sp,
-        fontWeight = FontWeight.Medium,
-        letterSpacing = 1.sp,
-        color = Color.Black
-    )
+    val commonTextStyle = MaterialTheme.typography.headlineSmall
 
+    if (setGameTime.value == true) {
+        setGameTime(game)
+    } else {
+        LaunchedEffect(Unit)
+        {
+            game.timerManager.startTimer()
+        }
+    }
     Column(
         modifier = Modifier.fillMaxSize()
     )
     {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFB58863))
-        )
-        {
-            topBarItems(game)
+                .background(Color(0xFF4A2F1A))
+                .padding(2.dp)
+        ) {
+            if (maxWidth < 700.dp)
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    topBarItems(game)
+                }
+            else
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF4A2F1A))
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    topBarItems(game)
+                }
         }
 
         Row(
@@ -69,6 +86,7 @@ fun App(game: Game)
         {
             Column(
                 modifier = Modifier
+                    .weight(0.15f)
                     .background(Color(0xFFB58863))
                     .wrapContentWidth()
                     .fillMaxHeight(1f)
@@ -77,7 +95,9 @@ fun App(game: Game)
             {
                 Text(
                     text = "Match history",
-                    style = commonTextStyle
+                    style = commonTextStyle,
+                    maxLines = 1,
+                    softWrap = false
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -92,6 +112,8 @@ fun App(game: Game)
                         Text(
                             text = moveText,
                             style = commonTextStyle,
+                            maxLines = 1,
+                            softWrap = false,
                             modifier = Modifier.clickable {
                                 game.historyManager.goToMove(index)
                             }
@@ -101,15 +123,24 @@ fun App(game: Game)
             }
 
             Row(
-                modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                modifier = Modifier.weight(0.85f),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+
             )
             {
-                Column(horizontalAlignment = Alignment.CenterHorizontally)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .weight(0.2f)
+                        .padding(5.dp),
+                )
                 {
                     Text(
                         "White captures",
-                        style = commonTextStyle
+                        style = commonTextStyle,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        softWrap = false
                     )
 
                     game.capturedPieces
@@ -118,46 +149,52 @@ fun App(game: Game)
                             Text(
                                 text = piece.type.getSymbol(),
                                 fontSize = 40.sp,
-                                color = Color.White
+                                color = Color.White,
+                                textAlign = TextAlign.Center,
+                                maxLines = 1,
+                                softWrap = false
                             )
                         }
                 }
 
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Column(horizontalAlignment = Alignment.CenterHorizontally)
+                Column(
+                    modifier = Modifier.weight(0.6f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                )
                 {
                     gameInfoText(game)
 
-                    Box(
-                        modifier = Modifier
-                            .horizontalScroll(hScroll)
-                            .verticalScroll(vScroll)
+                    ChessBoard(
+                        game=game,
+                        onSquareClick = { row, col -> game.onSquareClick(row, col) }
                     )
-                    {
-                        ChessBoard(
-                            game=game,
-                            onSquareClick = { row, col -> game.onSquareClick(row, col) }
-                        )
-                    }
                 }
 
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Column(horizontalAlignment = Alignment.CenterHorizontally)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .weight(0.2f)
+                        .padding(5.dp)
+                )
                 {
                     Text(
                         "Black captures",
-                        style = commonTextStyle
+                        style = commonTextStyle,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        softWrap = false
                     )
 
                     game.capturedPieces
                         .filter { it.player == Player.BLACK }
                         .forEach{ piece ->
                             Text(
+                                textAlign = TextAlign.Center,
                                 text = piece.type.getSymbol(),
                                 fontSize = 40.sp,
-                                color = Color.Black
+                                color = Color.Black,
+                                maxLines = 1,
+                                softWrap = false
                             )
                         }
                 }
@@ -179,99 +216,123 @@ fun ChessBoard(
     val darkSquare = Color(0xFFB58863)
     val checkSquare = Color(0xFFE53935)
 
-    Row(
-        modifier = Modifier.padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxHeight()
     )
     {
-        Column()
+        var boardSize = minOf(maxWidth, maxHeight)
+        var squareSize = boardSize / 10
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        )
         {
-            for (row in 0..7) {
-                Box(
-                    modifier = Modifier.size(36.dp, 96.dp),
-                    contentAlignment = Alignment.Center
-                )
-                {
-                    Text("${8 - row}", fontSize = 24.sp)
+            Column()
+            {
+                for (row in 0..7) {
+                    Box(
+                        modifier = Modifier
+                            .width(squareSize * 0.4f)
+                            .height(squareSize),
+                        contentAlignment = Alignment.Center
+                    )
+                    {
+                        Text("${8 - row}",
+                            fontSize = (squareSize.value * 0.2f).sp,
+                            maxLines = 1,
+                            softWrap = false)
+                    }
                 }
             }
-        }
 
-        Column()
-        {
-            Box(
-                modifier = Modifier
-                    .border(4.dp, Color(0xFF5C4033), RoundedCornerShape(12.dp))
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFF5C4033))
-                    .padding(8.dp)
-            )
+            Column()
             {
-                Column()
+                Box(
+                    modifier = Modifier
+                        .border(4.dp, Color(0xFF5C4033), RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFF5C4033))
+                        .padding(8.dp)
+                )
                 {
-                    for (row in 0..7) {
-                        Row()
-                        {
-                            for (col in 0..7) {
+                    Column()
+                    {
+                        for (row in 0..7) {
+                            Row()
+                            {
+                                for (col in 0..7) {
 
-                                val piece = game.board.grid[row][col]
-                                val isSelected = game.selectedStartSquare == (row to col)
+                                    val piece = game.board.grid[row][col]
+                                    val isSelected = game.selectedStartSquare == (row to col)
 
-                                val isCheck = game.checkState.isCheck && game.checkState.kingPosition == (row to col)
-                                val isMovable = (row to col) in game.moveOptions.moves.map { it.first }.toSet()
-                                val isCapturable = (row to col) in game.moveOptions.captures
+                                    val isCheck =
+                                        game.checkState.isCheck && game.checkState.kingPosition == (row to col)
+                                    val isMovable = (row to col) in game.moveOptions.moves.map { it.first }.toSet()
+                                    val isCapturable = (row to col) in game.moveOptions.captures
 
-                                Box(
-                                    modifier = Modifier
-                                        .size(96.dp)
-                                        .background(if (isWhiteSquare(row, col)) lightSquare else darkSquare)
-                                        .then(if (isSelected)
-                                            Modifier.border(3.dp, Color.Green)
-                                        else
-                                            Modifier
-                                        ).then(if (isCheck)
-                                            Modifier.background(checkSquare.copy(alpha = 0.4f))
-                                        else
-                                            Modifier
-                                        )
-                                        .clickable { onSquareClick(row, col) },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    if (piece != null)
-                                    {
-                                        Text(
-                                            text = piece.type.getSymbol(),
-                                            fontSize = 64.sp,
-                                            modifier = Modifier.scale(1.4f),
-                                            color = if (piece.player == Player.WHITE)
-                                                Color.White
-                                            else
-                                                Color.Black
-                                        )
-                                    }
-                                    if (isCapturable)
-                                    {
-                                        Box(modifier = Modifier.fillMaxSize().padding(4.dp).border(3.dp, Color.Black.copy(alpha = 0.35f), CircleShape))
-                                    }
-                                    else if (isMovable)
-                                    {
-                                        Box(modifier = Modifier.size(14.dp).background(Color.Black.copy(alpha = 0.35f), CircleShape))
+                                    Box(
+                                        modifier = Modifier
+                                            .size(squareSize)
+                                            .background(if (isWhiteSquare(row, col)) lightSquare else darkSquare)
+                                            .then(
+                                                if (isSelected)
+                                                    Modifier.border(3.dp, Color.Green)
+                                                else
+                                                    Modifier
+                                            ).then(
+                                                if (isCheck)
+                                                    Modifier.background(checkSquare.copy(alpha = 0.4f))
+                                                else
+                                                    Modifier
+                                            )
+                                            .clickable { onSquareClick(row, col) },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        if (piece != null) {
+                                            Text(
+                                                text = piece.type.getSymbol(),
+                                                fontSize = (squareSize.value * 0.8f).sp,
+                                                color = if (piece.player == Player.WHITE)
+                                                    Color.White
+                                                else
+                                                    Color.Black,
+                                                maxLines = 1,
+                                                softWrap = false
+                                            )
+                                        }
+                                        if (isCapturable) {
+                                            Box(
+                                                modifier = Modifier.fillMaxSize().padding(squareSize * 0.04f)
+                                                    .border(3.dp, Color.Black.copy(alpha = 0.35f), CircleShape)
+                                            )
+                                        } else if (isMovable) {
+                                            Box(
+                                                modifier = Modifier.size(squareSize * 0.15f)
+                                                    .background(Color.Black.copy(alpha = 0.35f), CircleShape)
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
-            }
-            Row()
-            {
-                for (c in 'a'..'h') {
-                    Box(
-                        modifier = Modifier.size(96.dp, 36.dp),
-                        contentAlignment = Alignment.Center
-                    )
-                    {
-                        Text("$c", fontSize = 24.sp)
+                Row()
+                {
+                    for (c in 'a'..'h') {
+                        Box(
+                            modifier = Modifier
+                                .width(squareSize)
+                                .height(squareSize * 0.4f),
+                            contentAlignment = Alignment.Center
+                        )
+                        {
+                            Text("$c",
+                                fontSize = (squareSize.value * 0.2f).sp,
+                                maxLines = 1,
+                                softWrap = false)
+                        }
                     }
                 }
             }
@@ -286,9 +347,6 @@ fun styledButton(
 )
 {
     Button(
-        modifier = Modifier
-            .padding(8.dp)
-            .height(48.dp),
         onClick = { onClick() },
         shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(
@@ -299,108 +357,106 @@ fun styledButton(
     {
         Text(
             text = label,
-            style = TextStyle(
-                fontSize = 14.sp,
+            style = MaterialTheme.typography.labelLarge.copy(
                 fontWeight = FontWeight.Medium,
                 letterSpacing = 1.sp
-            )
+            ),
+            maxLines = 1,
+            softWrap = false
         )
     }
 }
-
 
 @Composable
-fun topBarItems(game: Game)
-{
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFF4A2F1A))
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+fun topBarItems(game: Game) {
+    timerBox(
+        label = "White",
+        totalSeconds = game.timerManager.timeLeftWhite,
+        background = Color.DarkGray,
+        textColor = Color.White
+    )
+
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     )
     {
-
-        timerBox(
-            label = "White",
-            minutes = game.timerManager.timeLeftWhite / 60,
-            seconds = game.timerManager.timeLeftWhite % 60,
-            background = Color.DarkGray,
-            textColor = Color.White
-        )
-
-        Row()
-        {
+        item {
             styledButton("RESTART GAME") { game.restartGame() }
+        }
+        item {
             styledButton("RESIGN GAME") { game.resignGame() }
         }
-
-        timerBox(
-            label = "Black",
-            minutes = game.timerManager.timeLeftBlack / 60,
-            seconds = game.timerManager.timeLeftBlack % 60,
-            background = Color(0xFFB58863),
-            textColor = Color.White
-        )
+        item {
+            styledButton("CHANGE TYPE") { setGameTime.value = true }
+        }
     }
+
+    timerBox(
+        label = "Black",
+        totalSeconds = game.timerManager.timeLeftBlack,
+        background = Color(0xFFB58863),
+        textColor = Color.White
+    )
 }
+
 @Composable
 fun timerBox(
     label: String,
-    minutes: Int,
-    seconds: Int,
+    totalSeconds: Int,
     background: Color,
     textColor: Color
-)
-{
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
+) {
+    Card(
+        shape = RoundedCornerShape(10.dp),
+        colors = CardDefaults.cardColors(containerColor = background),
         modifier = Modifier
-            .background(background, RoundedCornerShape(10.dp))
-            .padding(horizontal = 14.dp, vertical = 8.dp)
-    )
-    {
-        Text(
-            text = label,
-            fontSize = 12.sp,
-            color = textColor.copy(alpha = 0.8f)
-        )
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = textColor.copy(alpha = 0.75f),
+                maxLines = 1,
+                softWrap = false
+            )
 
-        Text(
-            text = String.format("%02d:%02d", minutes, seconds),
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = textColor
-        )
+            Text(
+                text = formatTime(totalSeconds),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = textColor,
+                maxLines = 1,
+                softWrap = false
+            )
+        }
     }
 }
 
 @Composable
 fun gameInfoText(game : Game)
 {
-    Row()
-    {
-        if (game.gameState != GameState.PLAYING)
-        {
-            Text(
-                text = game.message,
-                color = Color.Red,
-                style = MaterialTheme.typography.headlineMedium
-            )
-        }
+    val (text, color) = if (game.gameState != GameState.PLAYING) {
+        game.message to MaterialTheme.colorScheme.error
+    } else {
+        if (game.playerOnTurn == Player.WHITE)
+            "White to move" to MaterialTheme.colorScheme.onSurface
         else
-        {
-            Text(
-                text = if (game.playerOnTurn == Player.WHITE)
-                    "White to move"
-                else
-                    "Black to move",
-                style = MaterialTheme.typography.headlineMedium
-            )
-        }
+            "Black to move" to MaterialTheme.colorScheme.onSurface
     }
+
+    Text(
+        text = text,
+        color = color,
+        style = MaterialTheme.typography.headlineMedium,
+        maxLines = 1,
+        softWrap = false
+    )
 }
+
 @Composable
 fun promotionDialog(game: Game)
 {
@@ -420,23 +476,69 @@ fun promotionDialog(game: Game)
                 .padding(16.dp)
                 .wrapContentSize()
         ) {
-            Column(
+            LazyColumn(
                 modifier = Modifier.padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text(
-                    "Pawn Promotion",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.Black
-                )
+                item {
+                    Text(
+                        "Pawn Promotion",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                getPromotionPieces().forEach{
+                items(getPromotionPieces().toList()){
                     styledButton(it.getSymbol() + " " + it.getLabel())
                     {
                         game.pawnPromotion(it)
+                    }
+                }
+            }
+        }
+    }
+}
+@Composable
+fun setGameTime(game: Game) {
+    Dialog(
+        onDismissRequest = {},
+        properties = DialogProperties(
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false
+        )
+    )
+    {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 8.dp,
+            modifier = Modifier
+                .padding(16.dp)
+                .widthIn(max = 420.dp)
+        ) {
+            LazyColumn(
+                modifier = Modifier.padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                item {
+                    Text(
+                        "Game type",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                }
+
+                items( GameType.entries.toList()) { type ->
+                    styledButton("${type.gameTypeName} (${formatTime(type.gameTime)})") {
+                        game.setTime(type.gameTime)
+                        setGameTime.value = false
+                        game.restartGame()
                     }
                 }
             }

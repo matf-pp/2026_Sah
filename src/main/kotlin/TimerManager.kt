@@ -10,14 +10,18 @@ import kotlinx.coroutines.launch
 
 class TimerManager(private val game: Game)
 {
-    var timeLeftWhite by mutableIntStateOf(900)
+    var startTime = 900
+    var timeLeftWhite by mutableIntStateOf(startTime)
         private set
-    var timeLeftBlack by mutableIntStateOf(900)
+    var timeLeftBlack by mutableIntStateOf(startTime)
         private set
 
     private var timerJob: Job? = null
     private val gameScope = CoroutineScope(Dispatchers.Default)
 
+    fun setTime(time: Int) {
+        startTime = time
+    }
     fun startTimer()
     {
         timerJob?.cancel()
@@ -92,8 +96,8 @@ class TimerManager(private val game: Game)
     {
         stopTimer()
 
-        timeLeftWhite = 900
-        timeLeftBlack = 900
+        timeLeftWhite = startTime
+        timeLeftBlack = startTime
 
         startTimer()
     }

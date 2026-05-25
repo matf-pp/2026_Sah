@@ -273,6 +273,10 @@ class Game {
         isEndSquareSelected = false
         moveOptions=MoveOptions(emptyList(),emptyList())
     }
+    fun setTime(time: Int) {
+        timerManager.setTime(time)
+    }
+
     fun calculateBoardStateHash(): Long
     {
         var hash: Long = 1
