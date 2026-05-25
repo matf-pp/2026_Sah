@@ -161,6 +161,10 @@ fun App(game: Game)
             }
         }
     }
+    if(game.promotionSquare != null)
+    {
+        promotionDialog(game)
+    }
 }
 
 @Composable
@@ -340,6 +344,48 @@ fun gameInfoText(game : Game)
                     "Black to move",
                 style = MaterialTheme.typography.headlineMedium
             )
+        }
+    }
+}
+@Composable
+fun promotionDialog(game: Game)
+{
+    Dialog(
+        onDismissRequest = {},
+        properties = DialogProperties(
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false
+        )
+    )
+    {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 8.dp,
+            modifier = Modifier
+                .padding(16.dp)
+                .wrapContentSize()
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    "Pawn Promotion",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = Color.Black
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                getPromotionPieces().forEach{
+                    styledButton(it.getSymbol() + " " + it.getLabel())
+                    {
+                        game.pawnPromotion(it)
+                    }
+                }
+            }
         }
     }
 }

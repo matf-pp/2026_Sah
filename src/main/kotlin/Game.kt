@@ -22,6 +22,9 @@ class Game {
     val boardStateHashHistory = mutableMapOf<Long,Int>()
     var fiftyMoveCounter:Int = 0
 
+    var promotionSquare by mutableStateOf<Pair<Int, Int>?>(null)
+    var pendingPromotionPlayer by mutableStateOf<Player?>(null)
+
     fun init()
     {
         val tempBoard = Board()
@@ -47,6 +50,9 @@ class Game {
         message = ""
         playerOnTurn = Player.WHITE
         gameState = GameState.PLAYING
+
+        promotionSquare =null
+        pendingPromotionPlayer = null
 
         boardStateHashHistory.clear()
         lastBoardStateHash = null
@@ -77,20 +83,27 @@ class Game {
         else
             whoWon(Player.WHITE)
     }
-    fun onSquareClick(row: Int, col: Int) {
 
+    fun onSquareClick(row: Int, col: Int)
+    {
         if (gameState != GameState.PLAYING) return
-        squareSelection(row, col)
-        if( isEndSquareSelected ) {
 
+        squareSelection(row, col)
+
+        if( isEndSquareSelected )
+        {
             val (fromRow, fromCol) = selectedStartSquare ?: return
             val (toRow, toCol) = row to col
+
             val legalMoves = moveOptions.moves.map { it.first }.toSet()
 
-            if (toRow to toCol in legalMoves) {
+            if (toRow to toCol in legalMoves)
+            {
+                historyManager.increaseMoveCounter()
 
                 val movingPiece = board.grid[fromRow][fromCol] ?:return
                 val tempBoard = board.clone()
+
                 if (moveExecutor.checkCastlingConditions(movingPiece,fromCol,toCol))
                 {
                     moveExecutor.executeCastling(tempBoard,movingPiece,fromRow,fromCol,toRow,toCol)
@@ -107,13 +120,21 @@ class Game {
                 moveExecutor.updateCastlingRights(tempBoard,fromRow,fromCol,toRow,toCol)
                 moveExecutor.updateEnPassantTarget(tempBoard,movingPiece,fromRow,toRow,toCol)
 
+                board = tempBoard
+                historyManager.addBoardToSnapshots(board.clone())
+
+                if (checkPromotionConditions(movingPiece,toRow))
+                {
+                    promotionSquare = toRow to toCol
+                    pendingPromotionPlayer = movingPiece.player
+                    return
+                }
+
+                lastBoardStateHash = calculateBoardStateHash()
+                boardStateHashHistory[lastBoardStateHash!!] = (boardStateHashHistory[lastBoardStateHash] ?: 0) + 1
+
                 evaluateCheck(playerOnTurn)
                 evaluateEndConditions(playerOnTurn)
-
-                board = tempBoard
-
-                historyManager.increaseMoveCounter()
-                historyManager.addBoardToSnapshots(board.clone())
 
                 switchPlayerOnTurn()
             }
@@ -124,6 +145,11 @@ class Game {
         }
     }
 
+    fun checkPromotionConditions(movingPiece: ChessPiece,row:Int):Boolean
+    {
+        return movingPiece.type == Piece.PAWN &&
+                ((movingPiece.player == Player.WHITE && row == 0) || (movingPiece.player == Player.BLACK && row == 7))
+    }
     fun squareSelection(row: Int, col: Int) {
 
         val piece = board.grid[row][col]
@@ -178,7 +204,8 @@ class Game {
     fun evaluateEndConditions(player: Player)
     {
         val checkValidator = CheckValidator(board)
-        //TODO implement draw logic
+        val drawValidator = DrawValidator(board,lastBoardStateHash!!,boardStateHashHistory,fiftyMoveCounter)
+
         if (checkValidator.isOpponentCheckmatedByPlayer(player))
         {
             message = "CHECKMATE!" + "  " + whoWon(player)
@@ -188,6 +215,11 @@ class Game {
         {
             message = "STALEMATE!" + "  " + whoWon(null)
             gameState = GameState.STALEMATE
+        }
+        else if (drawValidator.isDraw())
+        {
+            message = "DRAW!" + "  " + whoWon(null)
+            gameState = GameState.DRAW
         }
         else
         {
@@ -208,7 +240,36 @@ class Game {
                 playerOnTurn))
         }
     }
+    fun pawnPromotion(pieceType: Piece)
+    {
+        val (row, col) = promotionSquare!!
 
+        val tempBoard = board.clone()
+        tempBoard.grid[row][col]= ChessPiece(pieceType, pendingPromotionPlayer!!)
+        board = tempBoard
+
+        historyManager.removeLastBoard()
+        historyManager.addBoardToSnapshots(board.clone())
+
+        val last = historyManager.popLastMove()
+        val updated = last.copy(promotion = pieceType)
+        historyManager.addMoveToHistory(updated)
+
+        lastBoardStateHash = calculateBoardStateHash()
+        boardStateHashHistory[lastBoardStateHash!!] = (boardStateHashHistory[lastBoardStateHash] ?: 0) + 1
+
+        evaluateCheck(pendingPromotionPlayer!!)
+        evaluateEndConditions(pendingPromotionPlayer!!)
+
+        switchPlayerOnTurn()
+
+        promotionSquare = null
+        pendingPromotionPlayer = null
+
+        selectedStartSquare = null
+        isEndSquareSelected = false
+        moveOptions=MoveOptions(emptyList(),emptyList())
+    }
     fun calculateBoardStateHash(): Long
     {
         var hash: Long = 1
