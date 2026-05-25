@@ -34,7 +34,10 @@ fun App(game: Game)
 {
     val hScroll = rememberScrollState()
     val vScroll = rememberScrollState()
-
+    LaunchedEffect(Unit)
+    {
+        game.timerManager.startTimer()
+    }
     val commonTextStyle = TextStyle(
         fontSize = 24.sp,
         fontWeight = FontWeight.Medium,
@@ -305,8 +308,10 @@ fun styledButton(
     }
 }
 
+
 @Composable
-fun topBarItems(game: Game) {
+fun topBarItems(game: Game)
+{
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -314,14 +319,63 @@ fun topBarItems(game: Game) {
             .padding(horizontal = 16.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
-    ) {
+    )
+    {
+
+        timerBox(
+            label = "White",
+            minutes = game.timerManager.timeLeftWhite / 60,
+            seconds = game.timerManager.timeLeftWhite % 60,
+            background = Color.DarkGray,
+            textColor = Color.White
+        )
+
         Row()
         {
             styledButton("RESTART GAME") { game.restartGame() }
-            styledButton("RESIGN GAME") { game.resignGame()}
+            styledButton("RESIGN GAME") { game.resignGame() }
         }
+
+        timerBox(
+            label = "Black",
+            minutes = game.timerManager.timeLeftBlack / 60,
+            seconds = game.timerManager.timeLeftBlack % 60,
+            background = Color(0xFFB58863),
+            textColor = Color.White
+        )
     }
 }
+@Composable
+fun timerBox(
+    label: String,
+    minutes: Int,
+    seconds: Int,
+    background: Color,
+    textColor: Color
+)
+{
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .background(background, RoundedCornerShape(10.dp))
+            .padding(horizontal = 14.dp, vertical = 8.dp)
+    )
+    {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = textColor.copy(alpha = 0.8f)
+        )
+
+        Text(
+            text = String.format("%02d:%02d", minutes, seconds),
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = textColor
+        )
+    }
+}
+
 @Composable
 fun gameInfoText(game : Game)
 {

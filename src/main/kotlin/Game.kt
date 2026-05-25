@@ -17,6 +17,7 @@ class Game {
 
     val moveExecutor = MoveExecutor(this)
     val historyManager = HistoryManager(this)
+    var timerManager = TimerManager(this)
 
     var lastBoardStateHash: Long? = null
     val boardStateHashHistory = mutableMapOf<Long,Int>()
@@ -59,13 +60,14 @@ class Game {
         fiftyMoveCounter = 0
 
         historyManager.reset()
+        timerManager.reset()
     }
 
     fun resignGame() {
 
         if(gameState != GameState.PLAYING) return
         gameState = GameState.RESIGNED
-
+        timerManager.stopTimer()
         historyManager.addMoveToHistory(Move(
             -1,
             (-1 to -1),
@@ -227,6 +229,7 @@ class Game {
             gameState = GameState.PLAYING
         }
         if (gameState != GameState.PLAYING) {
+            timerManager.stopTimer()
             historyManager.addMoveToHistory(Move(
                 -1,
                 (-1 to -1),
