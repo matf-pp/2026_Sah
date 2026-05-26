@@ -242,8 +242,4 @@ class Game
                 playerOnTurn))
         }
     }
-
-    fun setTime(time: Int) {
-        timerManager.setTime(time)
-    }
 }

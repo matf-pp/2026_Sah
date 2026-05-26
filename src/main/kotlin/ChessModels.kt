@@ -14,16 +14,13 @@ enum class Piece(val pieceSymbol: String, val pieceLabel: String)
 enum class GameType(
     val gameTypeName: String,
     val gameTime: Int
-) {
-    // Bullet
+)
+{
     BULLET_1_0("Bullet", 60),
     BLITZ_5_0("Blitz", 300),
     RAPID_15_10("Rapid", 900),
     CLASSICAL_30_0("Classical", 1800),
     MARATHON_120_0("Marathon", 7200);
-
-    fun getLabel(): String = gameTypeName
-    fun getTime(): Int = gameTime
 }
 enum class Player
 {

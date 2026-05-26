@@ -21,9 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import kotlinx.coroutines.launch
 
-var setGameTime = mutableStateOf(true)
-
-
 fun main() = application()
 {
     val game = remember { Game().apply { init() } }
@@ -39,7 +36,7 @@ fun App(game: Game)
 {
     val commonTextStyle = MaterialTheme.typography.headlineSmall
 
-    if (setGameTime.value)
+    if (game.timerManager.setGameTime)
     {
         setGameTime(game)
     }
@@ -405,7 +402,7 @@ fun topBarItems(game: Game)
             styledButton("RESIGN GAME") { game.resignGame() }
         }
         item {
-            styledButton("CHANGE TYPE") { setGameTime.value = true }
+            styledButton("CHANGE TYPE") {  }
         }
     }
 
@@ -528,7 +525,8 @@ fun promotionDialog(game: Game)
 }
 
 @Composable
-fun setGameTime(game: Game) {
+fun setGameTime(game: Game)
+{
     Dialog(
         onDismissRequest = {},
         properties = DialogProperties(
@@ -560,11 +558,12 @@ fun setGameTime(game: Game) {
                     )
                 }
 
-                items( GameType.entries.toList()) { type ->
-                    styledButton("${type.gameTypeName} (${formatTime(type.gameTime)})") {
-                        game.setTime(type.gameTime)
-                        setGameTime.value = false
-                        game.restartGame()
+                items( GameType.entries.toList())
+                {
+                    type -> styledButton("${type.gameTypeName} (${formatTime(type.gameTime)})")
+                    {
+                        game.timerManager.setTime(type.gameTime)
+                        game.timerManager.setGameTime = false
                     }
                 }
             }

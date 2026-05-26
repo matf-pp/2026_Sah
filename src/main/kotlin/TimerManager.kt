@@ -1,5 +1,6 @@
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -10,18 +11,22 @@ import kotlinx.coroutines.launch
 
 class TimerManager(private val game: Game)
 {
-    var startTime = 900
-    var timeLeftWhite by mutableIntStateOf(startTime)
+    var setGameTime by mutableStateOf(true)
+
+    var timeLeftWhite by mutableIntStateOf(0)
         private set
-    var timeLeftBlack by mutableIntStateOf(startTime)
+    var timeLeftBlack by mutableIntStateOf(0)
         private set
 
     private var timerJob: Job? = null
     private val gameScope = CoroutineScope(Dispatchers.Default)
 
-    fun setTime(time: Int) {
-        startTime = time
+    fun setTime(time: Int)
+    {
+        timeLeftWhite = time
+        timeLeftBlack = time
     }
+
     fun startTimer()
     {
         timerJob?.cancel()
@@ -92,13 +97,14 @@ class TimerManager(private val game: Game)
         timerJob?.cancel()
         timerJob = null
     }
+
     fun reset()
     {
         stopTimer()
 
-        timeLeftWhite = startTime
-        timeLeftBlack = startTime
+        timeLeftWhite = 0
+        timeLeftBlack = 0
 
-        startTimer()
+        setGameTime = true
     }
 }
