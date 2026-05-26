@@ -40,7 +40,7 @@ class TimerManager(private val game: Game)
                     }
                     else
                     {
-                        game.message = "TIMEOUT!" + "   " + whoWon(Player.BLACK)
+                        game.message = "TIMEOUT!" + "   " + winnerMessage(Player.BLACK)
                         game.gameState = GameState.TIMEOUT
 
                         game.historyManager.addMoveToHistory(Move(
@@ -66,7 +66,7 @@ class TimerManager(private val game: Game)
                     }
                     else
                     {
-                        game.message = "TIMEOUT!" + "   " + whoWon(Player.WHITE)
+                        game.message = "TIMEOUT!" + "   " + winnerMessage(Player.WHITE)
                         game.gameState = GameState.TIMEOUT
 
                         game.historyManager.addMoveToHistory(Move(

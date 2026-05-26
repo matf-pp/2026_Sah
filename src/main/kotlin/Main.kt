@@ -274,7 +274,7 @@ fun ChessBoard(
                                     Box(
                                         modifier = Modifier
                                             .size(squareSize)
-                                            .background(if (isWhiteSquare(row, col)) lightSquare else darkSquare)
+                                            .background(if (isSquareWhite(row, col)) lightSquare else darkSquare)
                                             .then(
                                                 if (isSelected)
                                                     Modifier.border(3.dp, Color.Green)

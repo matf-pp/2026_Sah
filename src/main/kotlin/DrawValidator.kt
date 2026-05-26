@@ -46,8 +46,8 @@ class DrawValidator(private val board: Board,
         if (pieces.size == 2 &&
             pieces[0].first.type == Piece.BISHOP && pieces[1].first.type == Piece.BISHOP &&
             pieces[0].first.player != pieces[1].first.player &&
-            isWhiteSquare(pieces[0].second.first,pieces[0].second.second) ==
-            isWhiteSquare(pieces[1].second.first,pieces[1].second.second)
+            isSquareWhite(pieces[0].second.first,pieces[0].second.second) ==
+            isSquareWhite(pieces[1].second.first,pieces[1].second.second)
         )
         {
             return true

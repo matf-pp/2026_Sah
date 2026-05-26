@@ -81,9 +81,9 @@ class Game {
             playerOnTurn))
 
             message = "RESIGNED!" + "   " + if(playerOnTurn == Player.WHITE)
-            whoWon(Player.BLACK)
+            winnerMessage(Player.BLACK)
         else
-            whoWon(Player.WHITE)
+            winnerMessage(Player.WHITE)
     }
 
     fun onSquareClick(row: Int, col: Int)
@@ -210,17 +210,17 @@ class Game {
 
         if (checkValidator.isOpponentCheckmatedByPlayer(player))
         {
-            message = "CHECKMATE!" + "  " + whoWon(player)
+            message = "CHECKMATE!" + "  " + winnerMessage(player)
             gameState = GameState.CHECKMATE
         }
         else if (checkValidator.isStalemateCausedByPlayer(player))
         {
-            message = "STALEMATE!" + "  " + whoWon(null)
+            message = "STALEMATE!" + "  " + winnerMessage(null)
             gameState = GameState.STALEMATE
         }
         else if (drawValidator.isDraw())
         {
-            message = "DRAW!" + "  " + whoWon(null)
+            message = "DRAW!" + "  " + winnerMessage(null)
             gameState = GameState.DRAW
         }
         else
