@@ -2,7 +2,8 @@ import kotlin.math.abs
 
 class MoveExecutor(private val game: Game)
 {
-    fun executeNormalMove(board: Board, movingPiece: ChessPiece, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int) {
+    fun executeNormalMove(board: Board, movingPiece: ChessPiece, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
+    {
         val capturedPiece = board.grid[toRow][toCol]
 
         if (capturedPiece != null) {
@@ -23,10 +24,15 @@ class MoveExecutor(private val game: Game)
                     game.playerOnTurn
                 )
             )
-        } else {
-            if (movingPiece.type == Piece.PAWN) {
+        }
+        else
+        {
+            if (movingPiece.type == Piece.PAWN)
+            {
                 game.fiftyMoveCounter = 0
-            } else {
+            }
+            else
+            {
                 game.fiftyMoveCounter++
             }
 
@@ -45,18 +51,22 @@ class MoveExecutor(private val game: Game)
                 )
             )
         }
+
         board.grid[toRow][toCol] = movingPiece
         board.grid[fromRow][fromCol] = null
     }
+
     fun checkCastlingConditions(movingPiece: ChessPiece,fromCol: Int,toCol: Int):Boolean
     {
         return movingPiece.type == Piece.KING && abs(fromCol - toCol) == 2
     }
-    fun executeCastling(board: Board, movingPiece: ChessPiece, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int) {
+    fun executeCastling(board: Board, movingPiece: ChessPiece, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
+    {
         board.grid[fromRow][fromCol] = null
         board.grid[toRow][toCol] = movingPiece
 
-        if (toCol < fromCol) {
+        if (toCol < fromCol)
+        {
             board.grid[fromRow][toCol + 1] = board.grid[fromRow][0]
             board.grid[fromRow][0] = null
 
@@ -74,7 +84,9 @@ class MoveExecutor(private val game: Game)
                     game.playerOnTurn
                 )
             )
-        } else {
+        }
+        else
+        {
             board.grid[fromRow][toCol - 1] = board.grid[fromRow][7]
             board.grid[fromRow][7] = null
 
@@ -93,6 +105,7 @@ class MoveExecutor(private val game: Game)
                 )
             )
         }
+
         game.fiftyMoveCounter++
     }
     fun updateCastlingRights(board: Board, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)

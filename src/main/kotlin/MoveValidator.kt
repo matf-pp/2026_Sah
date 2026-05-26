@@ -203,12 +203,59 @@ class MoveValidator(private val board: Board)
 
         return MoveOptions(moves.toList(),captures.toList())
     }
+
     private fun getKnightMoves(row: Int, col: Int): MoveOptions
     {
         val directions = listOf(-2 to -1, -2 to 1, -1 to -2, -1 to 2, 1 to -2, 1 to 2, 2 to -1, 2 to 1)
 
         return getJumpMoves(row, col, directions)
     }
+    private fun getKingMoves(row: Int, col: Int): MoveOptions
+    {
+        val moves = mutableListOf<Pair<Pair<Int, Int>, MoveType>> ()
+        val captures = mutableListOf<Pair<Int, Int>> ()
+
+        val piece = board.grid[row][col] !!
+
+        val directions = listOf(-1 to -1, -1 to 0, -1 to 1, 0 to -1, 0 to 1, 1 to -1,  1 to 0,  1 to 1)
+
+        moves.addAll(getJumpMoves(row,col,directions).moves)
+        captures.addAll(getJumpMoves(row,col,directions).captures)
+
+        val startRow = if (piece.player == Player.WHITE) 7 else 0
+
+        val queenSideRights =
+            if (piece.player == Player.WHITE)
+                board.castlingRights.whiteQueenSide
+            else
+                board.castlingRights.blackQueenSide
+
+        val kingSideRights =
+            if (piece.player == Player.WHITE)
+                board.castlingRights.whiteKingSide
+            else
+                board.castlingRights.blackKingSide
+
+
+        if (queenSideRights)
+        {
+            if (board.grid[startRow][1] == null && board.grid[startRow][2] == null && board.grid[startRow][3] == null)
+            {
+                moves.add( Pair(Pair(startRow, col - 2),MoveType.CASTLE_QUEENS_SIDE) )
+            }
+        }
+
+        if (kingSideRights)
+        {
+            if (board.grid[startRow][5] == null && board.grid[startRow][6] == null)
+            {
+                moves.add( Pair(Pair(startRow, col + 2), MoveType.CASTLE_KINGS_SIDE ) )
+            }
+        }
+
+        return MoveOptions(moves.toList(),captures.toList())
+    }
+
     private fun getPawnMoves( row: Int, col: Int): MoveOptions
     {
         val moves = mutableListOf<Pair<Pair<Int, Int>, MoveType>> ()
@@ -260,51 +307,6 @@ class MoveValidator(private val board: Board)
             {
                 moves.add(Pair(Pair(row + moveDirection, col + 1), MoveType.EN_PASSANT))
                 captures.add(Pair(row + moveDirection, col + 1))
-            }
-        }
-
-        return MoveOptions(moves.toList(),captures.toList())
-    }
-    private fun getKingMoves(row: Int, col: Int): MoveOptions
-    {
-        val moves = mutableListOf<Pair<Pair<Int, Int>, MoveType>> ()
-        val captures = mutableListOf<Pair<Int, Int>> ()
-
-        val piece = board.grid[row][col] !!
-
-        val directions = listOf(-1 to -1, -1 to 0, -1 to 1, 0 to -1, 0 to 1, 1 to -1,  1 to 0,  1 to 1)
-
-        moves.addAll(getJumpMoves(row,col,directions).moves)
-        captures.addAll(getJumpMoves(row,col,directions).captures)
-
-        val startRow = if (piece.player == Player.WHITE) 7 else 0
-
-        val queenSideRights =
-            if (piece.player == Player.WHITE)
-                board.castlingRights.whiteQueenSide
-            else
-                board.castlingRights.blackQueenSide
-
-        val kingSideRights =
-            if (piece.player == Player.WHITE)
-                board.castlingRights.whiteKingSide
-            else
-                board.castlingRights.blackKingSide
-
-
-        if (queenSideRights)
-        {
-            if (board.grid[startRow][1] == null && board.grid[startRow][2] == null && board.grid[startRow][3] == null)
-            {
-                moves.add( Pair(Pair(startRow, col - 2),MoveType.CASTLE_QUEENS_SIDE) )
-            }
-        }
-
-        if (kingSideRights)
-        {
-            if (board.grid[startRow][5] == null && board.grid[startRow][6] == null)
-            {
-                moves.add( Pair(Pair(startRow, col + 2), MoveType.CASTLE_KINGS_SIDE ) )
             }
         }
 
