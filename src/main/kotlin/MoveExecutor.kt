@@ -8,7 +8,7 @@ class MoveExecutor(private val game: Game)
 
         if (capturedPiece != null) {
             game.capturedPieces += capturedPiece
-            game.fiftyMoveCounter = 0
+            game.drawValidator.fiftyMoveCounter = 0
 
             game.historyManager.addMoveToHistory(
                 Move(
@@ -29,11 +29,11 @@ class MoveExecutor(private val game: Game)
         {
             if (movingPiece.type == Piece.PAWN)
             {
-                game.fiftyMoveCounter = 0
+                game.drawValidator.fiftyMoveCounter = 0
             }
             else
             {
-                game.fiftyMoveCounter++
+                game.drawValidator.fiftyMoveCounter++
             }
 
             game.historyManager.addMoveToHistory(
@@ -106,7 +106,7 @@ class MoveExecutor(private val game: Game)
             )
         }
 
-        game.fiftyMoveCounter++
+        game.drawValidator.fiftyMoveCounter++
     }
     fun updateCastlingRights(board: Board, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
     {
@@ -169,7 +169,7 @@ class MoveExecutor(private val game: Game)
             GameState.PLAYING,
             game.playerOnTurn))
 
-        game.fiftyMoveCounter = 0
+        game.drawValidator.fiftyMoveCounter = 0
     }
     fun updateEnPassantTarget(board: Board, movingPiece: ChessPiece, fromRow: Int, toRow: Int, toCol: Int)
     {

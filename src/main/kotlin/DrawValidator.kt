@@ -1,8 +1,9 @@
-class DrawValidator(private val board: Board,
-                    private val boardState: Long,
-                    private val boardStateHistory: Map<Long, Int>,
-                    private val fiftyMoveCounter: Int)
+class DrawValidator(private val game: Game)
 {
+    var lastBoardState: Long? = null
+    val boardStateHistory = mutableMapOf<Long,Int>()
+    var fiftyMoveCounter = 0
+
     fun isDraw(): Boolean
     {
         if(isInsufficientMaterial())
@@ -28,7 +29,7 @@ class DrawValidator(private val board: Board,
         {
             for (col in 0..7)
             {
-                val piece = board.grid[row][col]
+                val piece = game.board.grid[row][col]
                 if (piece != null && piece.type != Piece.KING)
                 {
                     pieces.add(piece to (row to col))
@@ -57,10 +58,50 @@ class DrawValidator(private val board: Board,
     }
     fun threeFoldRepetition(): Boolean
     {
-        return boardStateHistory[boardState] == 3
+        return boardStateHistory[lastBoardState] == 3
     }
     fun fiftyMoveRule(): Boolean
     {
         return fiftyMoveCounter==50
+    }
+
+    fun calculateBoardStateHash(): Long
+    {
+        var hash: Long = 1
+
+        for (i in 0..7)
+        {
+            for (j in 0..7)
+            {
+                val piece = game.board.grid[i][j]
+                val pieceValue = if (piece == null)
+                    0
+                else
+                    (if (piece.player == Player.WHITE) 1 else 7) + piece.type.ordinal
+                hash = 31 * hash + pieceValue
+            }
+        }
+
+        hash = 31 * hash + if (game.board.castlingRights.whiteKingSide) 1 else 0
+        hash = 31 * hash + if (game.board.castlingRights.whiteQueenSide) 1 else 0
+        hash = 31 * hash + if (game.board.castlingRights.blackKingSide) 1 else 0
+        hash = 31 * hash + if (game.board.castlingRights.blackQueenSide) 1 else 0
+
+        if (game.board.enPassantTarget != null)
+        {
+            hash = 31 * hash + game.board.enPassantTarget!!.first
+            hash = 31 * hash + game.board.enPassantTarget!!.second
+        }
+
+        hash = 31 * hash + (if (game.playerOnTurn == Player.WHITE) 1 else 0)
+
+        return hash
+    }
+
+    fun reset()
+    {
+        lastBoardState = null
+        boardStateHistory.clear()
+        fiftyMoveCounter = 0
     }
 }

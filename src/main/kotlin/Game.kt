@@ -5,28 +5,27 @@ import kotlinx.coroutines.CompletableDeferred
 
 class Game
 {
-
-    var checkState by mutableStateOf(CheckState(false, null))
-    var message by mutableStateOf("")
     var board by mutableStateOf(Board())
+
+    var message by mutableStateOf("")
     var playerOnTurn by mutableStateOf(Player.WHITE)
-    var gameState by mutableStateOf(GameState.PLAYING)
+
+    var moveOptions by mutableStateOf(MoveOptions(emptyList(), emptyList()))
     var capturedPieces by mutableStateOf(listOf<ChessPiece>())
 
     var selectedStartSquare by mutableStateOf<Pair<Int, Int>?>(null)
     var isEndSquareSelected by mutableStateOf(false)
-    var moveOptions by mutableStateOf(MoveOptions(emptyList(), emptyList()))
-
-    val moveExecutor = MoveExecutor(this)
-    val historyManager = HistoryManager(this)
-    var timerManager = TimerManager(this)
-
-    var lastBoardStateHash: Long? = null
-    val boardStateHashHistory = mutableMapOf<Long,Int>()
-    var fiftyMoveCounter:Int = 0
 
     var promotionSquare by mutableStateOf<Pair<Int, Int>?>(null)
     var promotionPiece = CompletableDeferred<Piece>()
+
+    var checkState by mutableStateOf(CheckState(false, null))
+    var gameState by mutableStateOf(GameState.PLAYING)
+
+    val moveExecutor = MoveExecutor(this)
+    val historyManager = HistoryManager(this)
+    val drawValidator = DrawValidator(this)
+    var timerManager = TimerManager(this)
 
     fun init()
     {
@@ -40,28 +39,27 @@ class Game
         board = tempBoard
     }
 
-    fun restartGame() {
+    fun restartGame()
+    {
         init()
 
-        checkState = CheckState(false, null)
+        message = ""
+        playerOnTurn = Player.WHITE
+
+        moveOptions = MoveOptions(emptyList(), emptyList())
         capturedPieces = listOf()
 
         selectedStartSquare = null
         isEndSquareSelected = false
-        moveOptions = MoveOptions(emptyList(), emptyList())
-
-        message = ""
-        playerOnTurn = Player.WHITE
-        gameState = GameState.PLAYING
 
         promotionSquare =null
         promotionPiece = CompletableDeferred()
 
-        boardStateHashHistory.clear()
-        lastBoardStateHash = null
-        fiftyMoveCounter = 0
+        checkState = CheckState(false, null)
+        gameState = GameState.PLAYING
 
         historyManager.reset()
+        drawValidator.reset()
         timerManager.reset()
     }
 
@@ -139,8 +137,8 @@ class Game
                 board = tempBoard
                 historyManager.addBoardToSnapshots(board.clone())
 
-                lastBoardStateHash = calculateBoardStateHash()
-                boardStateHashHistory[lastBoardStateHash!!] = (boardStateHashHistory[lastBoardStateHash] ?: 0) + 1
+                drawValidator.lastBoardState = drawValidator.calculateBoardStateHash()
+                drawValidator.boardStateHistory[drawValidator.lastBoardState!!] = (drawValidator.boardStateHistory[drawValidator.lastBoardState] ?: 0) + 1
 
                 evaluateCheck(playerOnTurn)
                 evaluateEndConditions(playerOnTurn)
@@ -208,7 +206,6 @@ class Game
     fun evaluateEndConditions(player: Player)
     {
         val checkValidator = CheckValidator(board)
-        val drawValidator = DrawValidator(board,lastBoardStateHash!!,boardStateHashHistory,fiftyMoveCounter)
 
         if (checkValidator.isOpponentCheckmatedByPlayer(player))
         {
@@ -249,40 +246,4 @@ class Game
     fun setTime(time: Int) {
         timerManager.setTime(time)
     }
-
-    fun calculateBoardStateHash(): Long
-    {
-        var hash: Long = 1
-
-        for (i in 0..7)
-        {
-            for (j in 0..7)
-            {
-                val piece = board.grid[i][j]
-                val pieceValue = if (piece == null)
-                    0
-                else
-                    (if (piece.player == Player.WHITE) 1 else 7) + piece.type.ordinal
-                hash = 31 * hash + pieceValue
-            }
-        }
-
-        hash = 31 * hash + if (board.castlingRights.whiteKingSide) 1 else 0
-        hash = 31 * hash + if (board.castlingRights.whiteQueenSide) 1 else 0
-        hash = 31 * hash + if (board.castlingRights.blackKingSide) 1 else 0
-        hash = 31 * hash + if (board.castlingRights.blackQueenSide) 1 else 0
-
-        if (board.enPassantTarget != null)
-        {
-            hash = 31 * hash + board.enPassantTarget!!.first
-            hash = 31 * hash + board.enPassantTarget!!.second
-        }
-
-        hash = 31 * hash + (if (playerOnTurn == Player.WHITE) 1 else 0)
-
-        return hash
-    }
-
-
-
 }
