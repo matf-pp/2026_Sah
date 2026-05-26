@@ -402,7 +402,7 @@ fun topBarItems(game: Game)
             styledButton("RESIGN GAME") { game.resignGame() }
         }
         item {
-            styledButton("CHANGE TYPE") {  }
+            styledButton("PAUSE GAME") { game.pauseGame() }
         }
     }
 

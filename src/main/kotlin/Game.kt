@@ -62,14 +62,15 @@ class Game
         drawValidator.reset()
         timerManager.reset()
     }
-
-    fun resignGame() {
-
-        if(gameState != GameState.PLAYING) return
+    fun resignGame()
+    {
+        if(gameState != GameState.PLAYING && gameState != GameState.PAUSED) return
         gameState = GameState.RESIGNED
+
         timerManager.stopTimer()
-        historyManager.addMoveToHistory(Move(
-            -1,
+
+        historyManager.addMoveToHistory(
+            Move(-1,
             (-1 to -1),
             (-1 to -1),
             null,
@@ -84,6 +85,26 @@ class Game
             winnerMessage(Player.BLACK)
         else
             winnerMessage(Player.WHITE)
+    }
+    fun pauseGame()
+    {
+         when(gameState)
+        {
+            GameState.PLAYING ->
+                {
+                    gameState = GameState.PAUSED
+                    timerManager.stopTimer()
+                }
+            GameState.PAUSED ->
+                {
+                    gameState = GameState.PLAYING
+                    timerManager.startTimer()
+                }
+            else ->
+                {
+                    return
+                }
+        }
     }
 
     suspend fun onSquareClick(row: Int, col: Int)

@@ -47,7 +47,8 @@ enum class GameState
     CHECKMATE,
     STALEMATE,
     DRAW,
-    TIMEOUT
+    TIMEOUT,
+    PAUSED
 }
 
 enum class MoveType
