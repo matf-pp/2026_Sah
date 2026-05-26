@@ -1,8 +1,10 @@
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.CompletableDeferred
 
-class Game {
+class Game
+{
 
     var checkState by mutableStateOf(CheckState(false, null))
     var message by mutableStateOf("")
@@ -24,7 +26,7 @@ class Game {
     var fiftyMoveCounter:Int = 0
 
     var promotionSquare by mutableStateOf<Pair<Int, Int>?>(null)
-    var pendingPromotionPlayer by mutableStateOf<Player?>(null)
+    var promotionPiece = CompletableDeferred<Piece>()
 
     fun init()
     {
@@ -53,7 +55,7 @@ class Game {
         gameState = GameState.PLAYING
 
         promotionSquare =null
-        pendingPromotionPlayer = null
+        promotionPiece = CompletableDeferred()
 
         boardStateHashHistory.clear()
         lastBoardStateHash = null
@@ -86,7 +88,7 @@ class Game {
             winnerMessage(Player.WHITE)
     }
 
-    fun onSquareClick(row: Int, col: Int)
+    suspend fun onSquareClick(row: Int, col: Int)
     {
         if (gameState != GameState.PLAYING) return
 
@@ -122,15 +124,20 @@ class Game {
                 moveExecutor.updateCastlingRights(tempBoard,fromRow,fromCol,toRow,toCol)
                 moveExecutor.updateEnPassantTarget(tempBoard,movingPiece,fromRow,toRow,toCol)
 
-                board = tempBoard
-                historyManager.addBoardToSnapshots(board.clone())
-
-                if (checkPromotionConditions(movingPiece,toRow))
+                if (moveExecutor.checkPromotionConditions(movingPiece,toRow))
                 {
                     promotionSquare = toRow to toCol
-                    pendingPromotionPlayer = movingPiece.player
-                    return
+                    promotionPiece = CompletableDeferred()
+
+                    val selectedPromotionPiece = moveExecutor.awaitPromotionPiece()
+
+                    moveExecutor.pawnPromotion(tempBoard,selectedPromotionPiece,playerOnTurn)
+
+                    promotionSquare = null
                 }
+
+                board = tempBoard
+                historyManager.addBoardToSnapshots(board.clone())
 
                 lastBoardStateHash = calculateBoardStateHash()
                 boardStateHashHistory[lastBoardStateHash!!] = (boardStateHashHistory[lastBoardStateHash] ?: 0) + 1
@@ -147,11 +154,6 @@ class Game {
         }
     }
 
-    fun checkPromotionConditions(movingPiece: ChessPiece,row:Int):Boolean
-    {
-        return movingPiece.type == Piece.PAWN &&
-                ((movingPiece.player == Player.WHITE && row == 0) || (movingPiece.player == Player.BLACK && row == 7))
-    }
     fun squareSelection(row: Int, col: Int) {
 
         val piece = board.grid[row][col]
@@ -243,36 +245,7 @@ class Game {
                 playerOnTurn))
         }
     }
-    fun pawnPromotion(pieceType: Piece)
-    {
-        val (row, col) = promotionSquare!!
 
-        val tempBoard = board.clone()
-        tempBoard.grid[row][col]= ChessPiece(pieceType, pendingPromotionPlayer!!)
-        board = tempBoard
-
-        historyManager.removeLastBoard()
-        historyManager.addBoardToSnapshots(board.clone())
-
-        val last = historyManager.popLastMove()
-        val updated = last.copy(promotion = pieceType)
-        historyManager.addMoveToHistory(updated)
-
-        lastBoardStateHash = calculateBoardStateHash()
-        boardStateHashHistory[lastBoardStateHash!!] = (boardStateHashHistory[lastBoardStateHash] ?: 0) + 1
-
-        evaluateCheck(pendingPromotionPlayer!!)
-        evaluateEndConditions(pendingPromotionPlayer!!)
-
-        switchPlayerOnTurn()
-
-        promotionSquare = null
-        pendingPromotionPlayer = null
-
-        selectedStartSquare = null
-        isEndSquareSelected = false
-        moveOptions=MoveOptions(emptyList(),emptyList())
-    }
     fun setTime(time: Int) {
         timerManager.setTime(time)
     }

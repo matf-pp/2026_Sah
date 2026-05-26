@@ -19,6 +19,7 @@ import androidx.compose.ui.window.*
 import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import kotlinx.coroutines.launch
 
 var setGameTime = mutableStateOf(true)
 
@@ -164,9 +165,14 @@ fun App(game: Game)
                 {
                     gameInfoText(game)
 
+                    val scope = rememberCoroutineScope()
                     ChessBoard(
                         game=game,
-                        onSquareClick = { row, col -> game.onSquareClick(row, col) }
+                        onSquareClick = { row, col ->
+                            scope.launch {
+                                game.onSquareClick(row, col)
+                            }
+                        }
                     )
                 }
 
@@ -494,7 +500,7 @@ fun promotionDialog(game: Game)
                 items(getPromotionPieces().toList()){
                     styledButton(it.getSymbol() + " " + it.getLabel())
                     {
-                        game.pawnPromotion(it)
+                        game.promotionPiece.complete(it)
                     }
                 }
             }

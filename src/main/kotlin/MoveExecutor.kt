@@ -182,4 +182,23 @@ class MoveExecutor(private val game: Game)
             board.enPassantTarget= null
         }
     }
+
+    fun checkPromotionConditions(movingPiece: ChessPiece,row:Int):Boolean
+    {
+        return movingPiece.type == Piece.PAWN &&
+                ((movingPiece.player == Player.WHITE && row == 0) || (movingPiece.player == Player.BLACK && row == 7))
+    }
+    fun pawnPromotion(board: Board,pieceType: Piece,player:Player)
+    {
+        val (row, col) = game.promotionSquare!!
+        board.grid[row][col]= ChessPiece(pieceType, player)
+
+        val last = game.historyManager.popLastMove()
+        val updated = last.copy(promotion = pieceType)
+        game.historyManager.addMoveToHistory(updated)
+    }
+    suspend fun awaitPromotionPiece() : Piece
+    {
+        return game.promotionPiece.await()
+    }
 }
