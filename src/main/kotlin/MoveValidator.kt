@@ -14,74 +14,71 @@ class MoveValidator(private val board: Board)
             val (toRow, toCol) = pos
             val opponent = if (piece.player == Player.WHITE) Player.BLACK else Player.WHITE
 
-            var isLegal = true
+            var isMoveLegal = true
 
-            var tempBoard:Board
-
-            if(type == MoveType.NORMAL)
+            when(type)
             {
-                tempBoard = board.clone()
-
-                tempBoard.grid[toRow][toCol] = piece
-                tempBoard.grid[row][col] = null
-
-                val validator = CheckValidator(tempBoard)
-                if (validator.isPlayerGivingCheck(opponent))
+                MoveType.NORMAL ->
                 {
-                    isLegal = false
-                }
-            }
-            else if (type == MoveType.CASTLE_QUEENS_SIDE)
-            {
-                for(tempCol in 2 .. 4)
-                {
-                    tempBoard = board.clone()
+                    if (isKingVulnerable(board,opponent) { tempBoard ->
 
-                    tempBoard.grid[toRow][tempCol] = piece
-                    tempBoard.grid[row][col] = if(col == tempCol) piece else null
-
-                    val validator = CheckValidator(tempBoard)
-                    if (validator.isPlayerGivingCheck(opponent))
+                            tempBoard.grid[toRow][toCol] = piece
+                            tempBoard.grid[row][col] = null
+                    })
                     {
-                        isLegal = false
-                        break
+                        isMoveLegal = false
+                    }
+                }
+
+                MoveType.CASTLE_QUEENS_SIDE ->
+                {
+                    for(tempCol in 2 .. 4)
+                    {
+                        if (isKingVulnerable(board,opponent) { tempBoard ->
+
+                                tempBoard.grid[toRow][tempCol] = piece
+                                tempBoard.grid[row][col] =
+                                    if(col == tempCol) piece else null
+                            })
+                        {
+                            isMoveLegal = false
+                            break
+                        }
+                    }
+                }
+
+                MoveType.CASTLE_KINGS_SIDE ->
+                {
+                    for(tempCol in 4 .. 6)
+                    {
+                        if (isKingVulnerable(board,opponent) { tempBoard ->
+
+                                tempBoard.grid[toRow][tempCol] = piece
+                                tempBoard.grid[row][col] =
+                                    if(col == tempCol) piece else null
+                            })
+                        {
+                            isMoveLegal = false
+                            break
+                        }
+                    }
+                }
+
+                MoveType.EN_PASSANT ->
+                {
+                    if (isKingVulnerable(board,opponent) { tempBoard ->
+
+                            tempBoard.grid[toRow][toCol] = piece
+                            tempBoard.grid[row][col] = null
+                            tempBoard.grid[row][toCol] = null
+                        })
+                    {
+                        isMoveLegal = false
                     }
                 }
             }
-            else if (type == MoveType.CASTLE_KINGS_SIDE)
-            {
-                for(tempCol in 4 .. 6)
-                {
-                    tempBoard = board.clone()
 
-                    tempBoard.grid[toRow][tempCol] = piece
-                    tempBoard.grid[row][col] = if(col == tempCol) piece else null
-
-                    val validator = CheckValidator(tempBoard)
-                    if (validator.isPlayerGivingCheck(opponent))
-                    {
-                        isLegal = false
-                        break
-                    }
-                }
-            }
-            else if (type == MoveType.EN_PASSANT)
-            {
-                tempBoard = board.clone()
-
-                tempBoard.grid[toRow][toCol] = piece
-                tempBoard.grid[row][col] = null
-                tempBoard.grid[row][toCol] = null
-
-                val validator = CheckValidator(tempBoard)
-                if (validator.isPlayerGivingCheck(opponent))
-                {
-                    isLegal = false
-                }
-            }
-
-
-            if (isLegal)
+            if (isMoveLegal)
             {
                 legalMoves.add(toRow to toCol to type)
                 if((toRow to toCol) in pseudoResults.captures)
@@ -109,35 +106,31 @@ class MoveValidator(private val board: Board)
         }
     }
 
-    fun getRookMoves( row: Int, col: Int): MoveOptions
+    private fun getSlidingMoves( row: Int, col: Int, directions: List<Pair<Int, Int>>): MoveOptions
     {
-        val moves = mutableListOf<Pair<Pair<Int, Int>, MoveType>> ()
-        val captures = mutableListOf<Pair<Int, Int>> ()
+        val moves = mutableListOf<Pair<Pair<Int, Int>, MoveType>>()
+        val captures = mutableListOf<Pair<Int, Int>>()
 
         val piece = board.grid[row][col]!!
 
-        val directions = listOf(1 to 0, -1 to 0, 0 to 1, 0 to -1)
-
         for ((dirRow, dirCol) in directions)
         {
-
             var newRow = row + dirRow
             var newCol = col + dirCol
 
             while (newRow in 0..7 && newCol in 0..7)
             {
-
                 val target = board.grid[newRow][newCol]
 
                 if (target == null)
                 {
-                    moves.add(newRow to newCol to MoveType.NORMAL)
+                    moves.add((newRow to newCol) to MoveType.NORMAL)
                 }
                 else
                 {
                     if (target.player != piece.player)
                     {
-                        moves.add(newRow to newCol to MoveType.NORMAL)
+                        moves.add((newRow to newCol) to MoveType.NORMAL)
                         captures.add(newRow to newCol)
                     }
 
@@ -149,67 +142,14 @@ class MoveValidator(private val board: Board)
             }
         }
 
-        return MoveOptions(moves.toList(),captures.toList())
+        return MoveOptions(moves.toList(), captures.toList())
     }
-    fun getBishopMoves(row: Int, col: Int): MoveOptions
-    {
-        val moves = mutableListOf<Pair<Pair<Int, Int>, MoveType>> ()
-        val captures = mutableListOf<Pair<Int, Int>> ()
-
-        val piece = board.grid[row][col] !!
-        val directions = listOf(1 to 1, 1 to -1, -1 to 1, -1 to -1)
-
-        for ((dirRow, dirCol) in directions)
-        {
-            var newRow = row + dirRow
-            var newCol = col + dirCol
-
-            while (newRow in 0..7 && newCol in 0..7) {
-
-                val target = board.grid[newRow][newCol]
-
-                if (target == null)
-                {
-                    moves.add(newRow to newCol to MoveType.NORMAL)
-                }
-                else
-                {
-                    if (target.player != piece.player)
-                    {
-                        moves.add(newRow to newCol to MoveType.NORMAL)
-                        captures.add(newRow to newCol)
-                    }
-                    break
-                }
-
-                newRow += dirRow
-                newCol += dirCol
-            }
-        }
-
-        return MoveOptions(moves.toList(),captures.toList())
-    }
-    fun getQueenMoves( row: Int, col: Int): MoveOptions
-    {
-        val moves = mutableListOf<Pair<Pair<Int, Int>, MoveType>>()
-        val captures = mutableListOf<Pair<Int, Int>> ()
-
-        moves.addAll(getRookMoves(row, col).moves)
-        captures.addAll(getRookMoves(row, col).captures)
-
-        moves.addAll(getBishopMoves(row, col ).moves)
-        captures.addAll(getBishopMoves(row, col).captures)
-
-        return MoveOptions(moves.toList(),captures.toList())
-    }
-    fun getKnightMoves(row: Int, col: Int): MoveOptions
+    private fun getJumpMoves(row: Int, col: Int, directions: List<Pair<Int, Int>>): MoveOptions
     {
         val moves = mutableListOf<Pair<Pair<Int, Int>, MoveType>>()
         val captures = mutableListOf<Pair<Int, Int>> ()
 
         val piece = board.grid[row][col] !!
-
-        val directions = listOf(-2 to -1, -2 to 1, -1 to -2, -1 to 2, 1 to -2, 1 to 2, 2 to -1, 2 to 1)
 
         for ((dirRow, dirCol) in directions)
         {
@@ -235,9 +175,41 @@ class MoveValidator(private val board: Board)
             }
         }
 
+        return MoveOptions(moves.toList(), captures.toList())
+    }
+
+    private fun getRookMoves( row: Int, col: Int): MoveOptions
+    {
+        val directions = listOf(1 to 0, -1 to 0, 0 to 1, 0 to -1)
+
+        return getSlidingMoves( row, col, directions)
+    }
+    private fun getBishopMoves(row: Int, col: Int): MoveOptions
+    {
+        val directions = listOf(1 to 1, 1 to -1, -1 to 1, -1 to -1)
+
+        return getSlidingMoves( row, col, directions)
+    }
+    private fun getQueenMoves( row: Int, col: Int): MoveOptions
+    {
+        val moves = mutableListOf<Pair<Pair<Int, Int>, MoveType>>()
+        val captures = mutableListOf<Pair<Int, Int>> ()
+
+        moves.addAll(getRookMoves(row, col).moves)
+        captures.addAll(getRookMoves(row, col).captures)
+
+        moves.addAll(getBishopMoves(row, col ).moves)
+        captures.addAll(getBishopMoves(row, col).captures)
+
         return MoveOptions(moves.toList(),captures.toList())
     }
-    fun getPawnMoves( row: Int, col: Int): MoveOptions
+    private fun getKnightMoves(row: Int, col: Int): MoveOptions
+    {
+        val directions = listOf(-2 to -1, -2 to 1, -1 to -2, -1 to 2, 1 to -2, 1 to 2, 2 to -1, 2 to 1)
+
+        return getJumpMoves(row, col, directions)
+    }
+    private fun getPawnMoves( row: Int, col: Int): MoveOptions
     {
         val moves = mutableListOf<Pair<Pair<Int, Int>, MoveType>> ()
         val captures = mutableListOf<Pair<Int, Int>> ()
@@ -293,7 +265,7 @@ class MoveValidator(private val board: Board)
 
         return MoveOptions(moves.toList(),captures.toList())
     }
-    fun getKingMoves(row: Int, col: Int): MoveOptions
+    private fun getKingMoves(row: Int, col: Int): MoveOptions
     {
         val moves = mutableListOf<Pair<Pair<Int, Int>, MoveType>> ()
         val captures = mutableListOf<Pair<Int, Int>> ()
@@ -302,61 +274,37 @@ class MoveValidator(private val board: Board)
 
         val directions = listOf(-1 to -1, -1 to 0, -1 to 1, 0 to -1, 0 to 1, 1 to -1,  1 to 0,  1 to 1)
 
-        for ((dirRow, dirCol) in directions) {
-
-            val newRow = row + dirRow
-            val newCol = col + dirCol
-
-            if (newRow in 0..7 && newCol in 0..7) {
-
-                val target = board.grid[newRow][newCol]
-
-                if (target == null)
-                {
-                    moves.add(newRow to newCol to MoveType.NORMAL)
-                }
-                else if (target.player != piece.player)
-                {
-                    moves.add(newRow to newCol to MoveType.NORMAL)
-                    captures.add(newRow to newCol)
-                }
-            }
-        }
+        moves.addAll(getJumpMoves(row,col,directions).moves)
+        captures.addAll(getJumpMoves(row,col,directions).captures)
 
         val startRow = if (piece.player == Player.WHITE) 7 else 0
 
-        if(piece.player == Player.WHITE)
+        val queenSideRights =
+            if (piece.player == Player.WHITE)
+                board.castlingRights.whiteQueenSide
+            else
+                board.castlingRights.blackQueenSide
+
+        val kingSideRights =
+            if (piece.player == Player.WHITE)
+                board.castlingRights.whiteKingSide
+            else
+                board.castlingRights.blackKingSide
+
+
+        if (queenSideRights)
         {
-            if(board.castlingRights.whiteQueenSide)
+            if (board.grid[startRow][1] == null && board.grid[startRow][2] == null && board.grid[startRow][3] == null)
             {
-                if(board.grid[startRow][1] == null && board.grid[startRow][2] == null && board.grid[startRow][3] == null)
-                {
-                    moves.add(Pair(Pair(startRow, col - 2), MoveType.CASTLE_QUEENS_SIDE))
-                }
-            }
-            if(board.castlingRights.whiteKingSide)
-            {
-                if(board.grid[startRow][5] == null && board.grid[startRow][6] == null)
-                {
-                    moves.add(Pair(Pair(startRow, col + 2), MoveType.CASTLE_KINGS_SIDE))
-                }
+                moves.add( Pair(Pair(startRow, col - 2),MoveType.CASTLE_QUEENS_SIDE) )
             }
         }
-        else
+
+        if (kingSideRights)
         {
-            if(board.castlingRights.blackQueenSide)
+            if (board.grid[startRow][5] == null && board.grid[startRow][6] == null)
             {
-                if(board.grid[startRow][1] == null && board.grid[startRow][2] == null && board.grid[startRow][3] == null)
-                {
-                    moves.add(Pair(Pair(startRow, col - 2), MoveType.CASTLE_QUEENS_SIDE))
-                }
-            }
-            if(board.castlingRights.blackKingSide)
-            {
-                if(board.grid[startRow][5] == null && board.grid[startRow][6] == null)
-                {
-                    moves.add(Pair(Pair(startRow, col + 2), MoveType.CASTLE_KINGS_SIDE))
-                }
+                moves.add( Pair(Pair(startRow, col + 2), MoveType.CASTLE_KINGS_SIDE ) )
             }
         }
 

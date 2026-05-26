@@ -41,6 +41,16 @@ fun findKing(board: Board, player: Player) : Pair<Int, Int>?
     return null
 }
 
+fun isKingVulnerable(board:Board,opponent: Player, modifyBoard: (Board) -> Unit): Boolean
+{
+    val tempBoard = board.clone()
+
+    modifyBoard(tempBoard)
+
+    val validator = CheckValidator(tempBoard)
+    return validator.isPlayerGivingCheck(opponent)
+}
+
 fun formatTime(seconds: Int): String
 {
     val hours = seconds / 3600
