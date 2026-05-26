@@ -33,19 +33,24 @@ fun main() = application()
         App(game)
     }
 }
+
 @Composable
 fun App(game: Game)
 {
     val commonTextStyle = MaterialTheme.typography.headlineSmall
 
-    if (setGameTime.value == true) {
+    if (setGameTime.value)
+    {
         setGameTime(game)
-    } else {
+    }
+    else
+    {
         LaunchedEffect(Unit)
         {
             game.timerManager.startTimer()
         }
     }
+
     Column(
         modifier = Modifier.fillMaxSize()
     )
@@ -55,13 +60,15 @@ fun App(game: Game)
                 .fillMaxWidth()
                 .background(Color(0xFF4A2F1A))
                 .padding(2.dp)
-        ) {
+        )
+        {
             if (maxWidth < 700.dp)
                 Column(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxWidth()
-                ) {
+                )
+                {
                     topBarItems(game)
                 }
             else
@@ -72,7 +79,8 @@ fun App(game: Game)
                         .padding(horizontal = 16.dp, vertical = 10.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
-                ) {
+                )
+                {
                     topBarItems(game)
                 }
         }
@@ -207,6 +215,7 @@ fun App(game: Game)
             }
         }
     }
+
     if(game.promotionSquare != null)
     {
         promotionDialog(game)
@@ -217,7 +226,8 @@ fun App(game: Game)
 fun ChessBoard(
     game: Game,
     onSquareClick: (row: Int, col: Int) -> Unit
-) {
+)
+{
     val lightSquare = Color(0xFFF0D9B5)
     val darkSquare = Color(0xFFB58863)
     val checkSquare = Color(0xFFE53935)
@@ -227,8 +237,9 @@ fun ChessBoard(
             .fillMaxHeight()
     )
     {
-        var boardSize = minOf(maxWidth, maxHeight)
-        var squareSize = boardSize / 10
+        val boardSize = minOf(maxWidth, maxHeight)
+        val squareSize = boardSize / 10
+
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -272,8 +283,7 @@ fun ChessBoard(
                                     val piece = game.board.grid[row][col]
                                     val isSelected = game.selectedStartSquare == (row to col)
 
-                                    val isCheck =
-                                        game.checkState.isCheck && game.checkState.kingPosition == (row to col)
+                                    val isInCheck = game.checkState.isCheck && game.checkState.kingPosition == (row to col)
                                     val isMovable = (row to col) in game.moveOptions.moves.map { it.first }.toSet()
                                     val isCapturable = (row to col) in game.moveOptions.captures
 
@@ -287,14 +297,15 @@ fun ChessBoard(
                                                 else
                                                     Modifier
                                             ).then(
-                                                if (isCheck)
+                                                if (isInCheck)
                                                     Modifier.background(checkSquare.copy(alpha = 0.4f))
                                                 else
                                                     Modifier
                                             )
                                             .clickable { onSquareClick(row, col) },
                                         contentAlignment = Alignment.Center
-                                    ) {
+                                    )
+                                    {
                                         if (piece != null) {
                                             Text(
                                                 text = piece.type.getSymbol(),
@@ -374,7 +385,8 @@ fun styledButton(
 }
 
 @Composable
-fun topBarItems(game: Game) {
+fun topBarItems(game: Game)
+{
     timerBox(
         label = "White",
         totalSeconds = game.timerManager.timeLeftWhite,
@@ -411,7 +423,8 @@ fun timerBox(
     totalSeconds: Int,
     background: Color,
     textColor: Color
-) {
+)
+{
     Card(
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(containerColor = background),
@@ -445,9 +458,12 @@ fun timerBox(
 @Composable
 fun gameInfoText(game : Game)
 {
-    val (text, color) = if (game.gameState != GameState.PLAYING) {
+    val (text, color) = if (game.gameState != GameState.PLAYING)
+    {
         game.message to MaterialTheme.colorScheme.error
-    } else {
+    }
+    else
+    {
         if (game.playerOnTurn == Player.WHITE)
             "White to move" to MaterialTheme.colorScheme.onSurface
         else
@@ -481,12 +497,14 @@ fun promotionDialog(game: Game)
             modifier = Modifier
                 .padding(16.dp)
                 .wrapContentSize()
-        ) {
+        )
+        {
             LazyColumn(
                 modifier = Modifier.padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
+            )
+            {
                 item {
                     Text(
                         "Pawn Promotion",
@@ -497,7 +515,8 @@ fun promotionDialog(game: Game)
                     )
                 }
 
-                items(getPromotionPieces().toList()){
+                items(getPromotionPieces().toList())
+                {
                     styledButton(it.getSymbol() + " " + it.getLabel())
                     {
                         game.promotionPiece.complete(it)
@@ -507,6 +526,7 @@ fun promotionDialog(game: Game)
         }
     }
 }
+
 @Composable
 fun setGameTime(game: Game) {
     Dialog(
