@@ -26,10 +26,6 @@ class HistoryManager(private val game: Game)
     {
         boardSnapshots.add(board)
     }
-    fun removeLastBoard()
-    {
-        boardSnapshots.removeAt(boardSnapshots.lastIndex)
-    }
 
     fun getMovesHistoryFormated() : List<String>
     {
