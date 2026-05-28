@@ -3,7 +3,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -48,166 +47,182 @@ fun App(game: Game)
         }
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize()
-    )
+    Row( modifier = Modifier.fillMaxSize())
     {
-        BoxWithConstraints(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF4A2F1A))
-                .padding(2.dp)
+                .weight(0.12f)
+                .background(Color(0xFFB58863))
+                .wrapContentWidth()
+                .fillMaxHeight(1f)
+                .padding(10.dp)
         )
         {
-            if (maxWidth < 700.dp)
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                {
-                    topBarItems(game)
-                }
-            else
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFF4A2F1A))
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                )
-                {
-                    topBarItems(game)
-                }
-        }
+            Spacer(modifier = Modifier.height(24.dp))
 
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.LightGray),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        )
-        {
+            Text(
+                text = "MATCH HISTORY",
+                style = commonTextStyle,
+                maxLines = 1,
+                softWrap = false
+            )
+
+            Spacer(modifier = Modifier.height(40.dp))
+
             Column(
                 modifier = Modifier
-                    .weight(0.15f)
-                    .background(Color(0xFFB58863))
-                    .wrapContentWidth()
-                    .fillMaxHeight(1f)
-                    .padding(10.dp)
+                    .verticalScroll(rememberScrollState())
+                    .weight(1f, fill = false)
             )
             {
-                Text(
-                    text = "Match history",
-                    style = commonTextStyle,
-                    maxLines = 1,
-                    softWrap = false
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Column(
-                    modifier = Modifier
-                        .verticalScroll(rememberScrollState())
-                        .weight(1f, fill = false)
-                )
-                {
-                    game.historyManager.getMovesHistoryFormated().forEachIndexed { index, moveText ->
-                        Text(
-                            text = moveText,
-                            style = commonTextStyle,
-                            maxLines = 1,
-                            softWrap = false,
-                            modifier = Modifier.clickable {
-                                game.historyManager.goToMove(index)
-                            }
-                        )
-                    }
+                game.historyManager.getMovesHistoryFormated().forEachIndexed { index, moveText ->
+                    Text(
+                        text = moveText,
+                        style = commonTextStyle,
+                        maxLines = 1,
+                        softWrap = false,
+                        modifier = Modifier.clickable {
+                            game.historyManager.goToMove(index)
+                        }
+                    )
                 }
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .weight(0.88f)
+        )
+        {
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF4A2F1A))
+                    .padding(2.dp)
+            )
+            {
+                if (maxWidth < 700.dp)
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    {
+                        topBarItems(game)
+                    }
+                else
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFF4A2F1A))
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    )
+                    {
+                        topBarItems(game)
+                    }
             }
 
             Row(
-                modifier = Modifier.weight(0.85f),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.LightGray),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             )
             {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .weight(0.2f)
-                        .padding(5.dp),
-                )
-                {
-                    Text(
-                        "White captures",
-                        style = commonTextStyle,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        softWrap = false
+
+
+                Row(
+                    modifier = Modifier.weight(0.85f),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+
                     )
-
-                    game.capturedPieces
-                        .filter { it.player == Player.WHITE }
-                        .forEach{ piece ->
-                            Text(
-                                text = piece.type.getSymbol(),
-                                fontSize = 40.sp,
-                                color = Color.White,
-                                textAlign = TextAlign.Center,
-                                maxLines = 1,
-                                softWrap = false
-                            )
-                        }
-                }
-
-                Column(
-                    modifier = Modifier.weight(0.6f),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                )
                 {
-                    gameInfoText(game)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .weight(0.2f)
+                            .padding(5.dp),
+                    )
+                    {
+                        Spacer(modifier = Modifier.height(20.dp))
 
-                    val scope = rememberCoroutineScope()
-                    ChessBoard(
-                        game=game,
-                        onSquareClick = { row, col ->
-                            scope.launch {
-                                game.onSquareClick(row, col)
+                        Text(
+                            "WHITE CAPTURES",
+                            style = commonTextStyle,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+
+                        game.capturedPieces
+                            .filter { it.player == Player.WHITE }
+                            .forEach{ piece ->
+                                Text(
+                                    text = piece.type.getSymbol(),
+                                    fontSize = 40.sp,
+                                    color = Color.White,
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
                             }
-                        }
-                    )
-                }
+                    }
 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .weight(0.2f)
-                        .padding(5.dp)
-                )
-                {
-                    Text(
-                        "Black captures",
-                        style = commonTextStyle,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        softWrap = false
+                    Column(
+                        modifier = Modifier.weight(0.6f),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     )
+                    {
+                        Spacer(modifier = Modifier.height(20.dp))
 
-                    game.capturedPieces
-                        .filter { it.player == Player.BLACK }
-                        .forEach{ piece ->
-                            Text(
-                                textAlign = TextAlign.Center,
-                                text = piece.type.getSymbol(),
-                                fontSize = 40.sp,
-                                color = Color.Black,
-                                maxLines = 1,
-                                softWrap = false
-                            )
-                        }
+                        gameInfoText(game)
+
+                        Spacer(modifier = Modifier.height(40.dp))
+
+                        val scope = rememberCoroutineScope()
+                        ChessBoard(
+                            game=game,
+                            onSquareClick = { row, col ->
+                                scope.launch {
+                                    game.onSquareClick(row, col)
+                                }
+                            }
+                        )
+                    }
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .weight(0.2f)
+                            .padding(5.dp)
+                    )
+                    {
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        Text(
+                            "BLACK CAPTURES",
+                            style = commonTextStyle,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+
+                        game.capturedPieces
+                            .filter { it.player == Player.BLACK }
+                            .forEach{ piece ->
+                                Text(
+                                    textAlign = TextAlign.Center,
+                                    text = piece.type.getSymbol(),
+                                    fontSize = 40.sp,
+                                    color = Color.Black,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
+                    }
                 }
             }
         }
@@ -384,34 +399,63 @@ fun styledButton(
 @Composable
 fun topBarItems(game: Game)
 {
-    timerBox(
-        label = "White",
-        totalSeconds = game.timerManager.timeLeftWhite,
-        background = Color.DarkGray,
-        textColor = Color.White
-    )
-
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
     )
     {
-        item {
-            styledButton("RESTART GAME") { game.restartGame() }
+        Box(
+            modifier = Modifier.weight(1f)
+                               .padding(end = 90.dp),
+            contentAlignment = Alignment.Center
+        )
+        {
+            timerBox(
+                label = "White",
+                totalSeconds = game.timerManager.timeLeftWhite,
+                background = Color.DarkGray,
+                textColor = Color.White
+            )
         }
-        item {
-            styledButton("RESIGN GAME") { game.resignGame() }
+
+        Row(
+            modifier = Modifier.weight(2f),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        )
+        {
+            styledButton("RESTART GAME") {
+                game.restartGame()
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            styledButton("RESIGN GAME") {
+                game.resignGame()
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            styledButton("PAUSE GAME") {
+                game.pauseGame()
+            }
         }
-        item {
-            styledButton("PAUSE GAME") { game.pauseGame() }
+
+        Box(
+            modifier = Modifier.weight(1f)
+                                .offset(x = (45).dp),
+            contentAlignment = Alignment.Center
+        )
+        {
+            timerBox(
+                label = "Black",
+                totalSeconds = game.timerManager.timeLeftBlack,
+                background = Color(0xFFB58863),
+                textColor = Color.White
+            )
         }
     }
 
-    timerBox(
-        label = "Black",
-        totalSeconds = game.timerManager.timeLeftBlack,
-        background = Color(0xFFB58863),
-        textColor = Color.White
-    )
 }
 
 @Composable
