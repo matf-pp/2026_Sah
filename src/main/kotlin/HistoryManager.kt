@@ -18,6 +18,10 @@ class HistoryManager(private val game: Game)
     {
         movesHistory.add(move)
     }
+    fun getLastMove(): Move?
+    {
+        return movesHistory.lastOrNull()
+    }
     fun popLastMove(): Move
     {
         return movesHistory.removeAt(movesHistory.lastIndex)

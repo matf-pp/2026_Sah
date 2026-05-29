@@ -67,7 +67,7 @@ fun App(game: Game)
                 softWrap = false
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(58.dp))
 
             Column(
                 modifier = Modifier
@@ -243,6 +243,8 @@ fun ChessBoard(
     val lightSquare = Color(0xFFF0D9B5)
     val darkSquare = Color(0xFFB58863)
     val checkSquare = Color(0xFFE53935)
+    val fromSquare = Color(0xFFFDD835)
+    val toSquare = Color(0xFFFFF176)
 
     BoxWithConstraints(
         modifier = Modifier
@@ -299,6 +301,10 @@ fun ChessBoard(
                                     val isMovable = (row to col) in game.moveOptions.moves.map { it.first }.toSet()
                                     val isCapturable = (row to col) in game.moveOptions.captures
 
+                                    val lastMove = game.historyManager.getLastMove()
+                                    val isFrom =  lastMove != null && lastMove.from == (row to col)
+                                    val isTo =  lastMove != null && lastMove.to == (row to col)
+
                                     Box(
                                         modifier = Modifier
                                             .size(squareSize)
@@ -311,6 +317,16 @@ fun ChessBoard(
                                             ).then(
                                                 if (isInCheck)
                                                     Modifier.background(checkSquare.copy(alpha = 0.4f))
+                                                else
+                                                    Modifier
+                                            ).then(
+                                                if (isFrom)
+                                                    Modifier.background(fromSquare.copy(alpha = 0.4f))
+                                                else
+                                                    Modifier
+                                            ).then(
+                                                if (isTo)
+                                                    Modifier.background(toSquare.copy(alpha = 0.4f))
                                                 else
                                                     Modifier
                                             )
