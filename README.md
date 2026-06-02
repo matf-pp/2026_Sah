@@ -1,5 +1,7 @@
 # Šah
 
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/5a2c95ac9c924247aaeb0f32b1a4b992)](https://app.codacy.com/gh/matf-pp/2026_Sah/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+
 ## O programu
 
 Ovaj program predstavlja implementaciju klasične igre šaha. Podržava kompletna pravila igre, uključujući specijalne poteze kao što su rokada, en passant i promocija pešaka.
