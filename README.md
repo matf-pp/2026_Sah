@@ -1,14 +1,19 @@
 # Šah
 
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/5a2c95ac9c924247aaeb0f32b1a4b992)](https://app.codacy.com/gh/matf-pp/2026_Sah/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-
 ## O programu
 
 Ovaj program predstavlja implementaciju klasične igre šaha. Podržava kompletna pravila igre, uključujući specijalne poteze kao što su rokada, en passant i promocija pešaka.
 
 Tok partije se beleži kroz istoriju poteza, a nakon završetka igre moguće je pregledati celu partiju kroz detaljan prikaz poteza. Implementiran je i sistem tajmera, uz mogućnost izbora različitih trajanja za partiju.
 
----
+Kada se program upali potrebno je izabrati trajanje partije. Nakon toga, figure se pomeraju klikom na polje sa kojeg se pomeraju, a zatim na jedno od dozvoljenih polja.
+
+### Demonstracija partije
+https://github.com/matf-pp/2026_Sah/blob/main/docs/simple_game.gif
+### Demonstracija korišćenja istorije
+Na kraju partije moguće je pogledati kako je tabla izgledala u određenom trenutku partije klikom na potez sa leve strane:
+
+https://github.com/matf-pp/2026_Sah/blob/main/docs/move_history.gif
 
 ##  Korišćene tehnologije
 
